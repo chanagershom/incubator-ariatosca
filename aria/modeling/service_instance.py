@@ -1633,20 +1633,24 @@ class OperationBase(InstanceModelMixin):
     :vartype operation_template: :class:`OperationTemplate`
     :ivar description: Human-readable description
     :vartype description: string
-    :ivar plugin: Associated plugin
-    :vartype plugin: :class:`Plugin`
     :ivar relationship_edge: When true specified that the operation is on the relationship's
                              target edge instead of its source (only used by relationship
                              operations)
     :vartype relationship_edge: bool
     :ivar implementation: Implementation (interpreted by the plugin)
     :vartype implementation: basestring
-    :ivar configuration: Configuration (interpreted by the plugin)
-    :vartype configuration: {basestring, object}
     :ivar dependencies: Dependency strings (interpreted by the plugin)
     :vartype dependencies: [basestring]
     :ivar inputs: Parameters that can be used by this operation
     :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar plugin: Associated plugin
+    :vartype plugin: :class:`Plugin`
+    :ivar configuration: Configuration (interpreted by the plugin)
+    :vartype configuration: {basestring, :class:`Parameter`}
+    :ivar function: Name of the operation function
+    :vartype function: basestring
+    :ivar arguments: Arguments to send to the operation function
+    :vartype arguments: {basestring: :class:`Parameter`}
     :ivar executor: Name of executor to run the operation with
     :vartype executor: basestring
     :ivar max_attempts: Maximum number of attempts allowed in case of failure
@@ -1728,34 +1732,41 @@ class OperationBase(InstanceModelMixin):
     def inputs(cls):
         return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
 
+    @declared_attr
+    def configuration(cls):
+        return relationship.many_to_many(cls, 'parameter', prefix='configuration', dict_key='name')
+
+    @declared_attr
+    def arguments(cls):
+        return relationship.many_to_many(cls, 'parameter', prefix='arguments', dict_key='name')
+
     # endregion
 
     description = Column(Text)
     relationship_edge = Column(Boolean)
     implementation = Column(Text)
-    configuration = Column(modeling_types.StrictDict(key_cls=basestring))
     dependencies = Column(modeling_types.StrictList(item_cls=basestring))
+    function = Column(Text)
     executor = Column(Text)
     max_attempts = Column(Integer)
     retry_interval = Column(Integer)
 
     def configure(self):
-        from . import models
-        # Note: for workflows (operations attached directly to the service) "interface" will be None
-        if (self.implementation is None) or (self.interface is None):
+        if (self.implementation is None) and (self.function is None):
             return
 
-        if self.plugin is None:
-            arguments = execution_plugin.instantiation.configure_operation(self)
+        if (self.plugin is None) and (self.interface is not None):
+            # Default to execution plugin ("interface" is None for workflow operations)
+            execution_plugin.instantiation.configure_operation(self)
         else:
             # In the future plugins may be able to add their own "configure_operation" hook that
-            # can validate the configuration and otherwise return specially derived arguments
-            arguments = self.configuration
+            # can validate the configuration and otherwise create specially derived arguments. For
+            # now, we just send all configuration parameters as arguments
+            utils.instantiate_dict(self, self.arguments, self.configuration)
 
-        # Note: the arguments will *override* operation inputs of the same name
-        if arguments:
-            for k, v in arguments.iteritems():
-                self.inputs[k] = models.Parameter.wrap(k, v)
+        # Send all inputs as extra arguments. Note that they will override existing arguments of the
+        # same names.
+        utils.instantiate_dict(self, self.arguments, self.inputs)
 
     @property
     def as_raw(self):
@@ -1764,17 +1775,18 @@ class OperationBase(InstanceModelMixin):
             ('description', self.description),
             ('implementation', self.implementation),
             ('dependencies', self.dependencies),
-            ('executor', self.executor),
-            ('max_attempts', self.max_attempts),
-            ('retry_interval', self.retry_interval),
             ('inputs', formatting.as_raw_dict(self.inputs))))
 
     def validate(self):
-        # TODO must be associated with interface or service
+        # TODO must be associated with either interface or service
         utils.validate_dict_values(self.inputs)
+        utils.validate_dict_values(self.configuration)
+        utils.validate_dict_values(self.arguments)
 
     def coerce_values(self, report_issues):
         utils.coerce_dict_values(self.inputs, report_issues)
+        utils.coerce_dict_values(self.configuration, report_issues)
+        utils.coerce_dict_values(self.arguments, report_issues)
 
     def dump(self):
         context = ConsumptionContext.get_thread_local()
@@ -1782,21 +1794,14 @@ class OperationBase(InstanceModelMixin):
         if self.description:
             console.puts(context.style.meta(self.description))
         with context.style.indent:
-            if self.plugin is not None:
-                console.puts('Plugin: {0}'.format(
-                    context.style.literal(self.plugin.name)))
             if self.implementation is not None:
                 console.puts('Implementation: {0}'.format(
                     context.style.literal(self.implementation)))
-            if self.configuration:
-                with context.style.indent:
-                    for k, v in self.configuration.iteritems():
-                        console.puts('{0}: {1}'.format(context.style.property(k),
-                                                       context.style.literal(v)))
             if self.dependencies:
                 console.puts(
                     'Dependencies: {0}'.format(
                         ', '.join((str(context.style.literal(v)) for v in self.dependencies))))
+            utils.dump_dict_values(self.inputs, 'Inputs')
             if self.executor is not None:
                 console.puts('Executor: {0}'.format(context.style.literal(self.executor)))
             if self.max_attempts is not None:
@@ -1804,7 +1809,13 @@ class OperationBase(InstanceModelMixin):
             if self.retry_interval is not None:
                 console.puts('Retry interval: {0}'.format(
                     context.style.literal(self.retry_interval)))
-            utils.dump_dict_values(self.inputs, 'Inputs')
+            if self.plugin is not None:
+                console.puts('Plugin: {0}'.format(
+                    context.style.literal(self.plugin.name)))
+            utils.dump_dict_values(self.configuration, 'Configuration')
+            if self.function is not None:
+                console.puts('Function: {0}'.format(context.style.literal(self.function)))
+            utils.dump_dict_values(self.arguments, 'Arguments')
 
 
 class ArtifactBase(InstanceModelMixin):

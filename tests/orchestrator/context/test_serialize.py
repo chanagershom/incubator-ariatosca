@@ -47,7 +47,7 @@ def _mock_workflow(ctx, graph):
         node.service,
         'test',
         'op',
-        operation_kwargs=dict(implementation=_operation_mapping(),
+        operation_kwargs=dict(function=_operation_mapping(),
                               plugin=plugin)
     )
     node.interfaces[interface.name] = interface

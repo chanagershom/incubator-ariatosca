@@ -27,7 +27,7 @@ from tests import storage
 
 
 def test_decorate_extension(context, executor):
-    inputs = {'input1': 1, 'input2': 2}
+    arguments = {'input1': 1, 'input2': 2}
 
     def get_node(ctx):
         return ctx.model.node.get_by_name(mock.models.DEPENDENCY_NODE_NAME)
@@ -41,24 +41,23 @@ def test_decorate_extension(context, executor):
             ctx.service,
             interface_name,
             operation_name,
-            operation_kwargs=dict(implementation='{0}.{1}'.format(__name__,
-                                                                  _mock_operation.__name__),
-                                  inputs=inputs)
+            operation_kwargs=dict(function='{0}.{1}'.format(__name__, _mock_operation.__name__),
+                                  arguments=arguments)
         )
         node.interfaces[interface.name] = interface
         task = api.task.OperationTask(
             node,
             interface_name=interface_name,
             operation_name=operation_name,
-            inputs=inputs)
+            inputs=arguments)
         graph.add_tasks(task)
         return graph
     graph = mock_workflow(ctx=context)  # pylint: disable=no-value-for-parameter
     eng = engine.Engine(executor=executor, workflow_context=context, tasks_graph=graph)
     eng.execute()
     out = get_node(context).runtime_properties['out']
-    assert out['wrapper_inputs'] == inputs
-    assert out['function_inputs'] == inputs
+    assert out['wrapper_inputs'] == arguments
+    assert out['function_inputs'] == arguments
 
 
 @extension.process_executor

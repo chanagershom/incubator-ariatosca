@@ -43,7 +43,7 @@ def ctx(tmpdir):
         relationship.source_node.service,
         RELATIONSHIP_INTERFACE_NAME,
         RELATIONSHIP_OPERATION_NAME,
-        operation_kwargs={'implementation': 'test'}
+        operation_kwargs=dict(function='test')
     )
     relationship.interfaces[interface.name] = interface
     context.model.relationship.update(relationship)
@@ -53,7 +53,7 @@ def ctx(tmpdir):
         node.service,
         NODE_INTERFACE_NAME,
         NODE_OPERATION_NAME,
-        operation_kwargs={'implementation': 'test'}
+        operation_kwargs=dict(function='test')
     )
     node.interfaces[interface.name] = interface
     context.model.node.update(node)
@@ -92,7 +92,7 @@ class TestOperationTask(object):
             node.service,
             NODE_INTERFACE_NAME,
             NODE_OPERATION_NAME,
-            operation_kwargs=dict(plugin=storage_plugin, implementation='test')
+            operation_kwargs=dict(plugin=storage_plugin, function='test')
         )
         node.interfaces[interface.name] = interface
         ctx.model.node.update(node)

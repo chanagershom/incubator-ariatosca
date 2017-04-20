@@ -148,7 +148,6 @@ class OperationTask(BaseTask):
             plugin=api_task.plugin,
             implementation=api_task.implementation,
             inputs=api_task.inputs
-
         )
         self._workflow_context.model.task.put(task_model)
 

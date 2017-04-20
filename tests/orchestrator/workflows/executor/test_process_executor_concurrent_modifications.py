@@ -78,7 +78,7 @@ def _test(context, executor, lock_files, func, expected_failure):
     key = 'key'
     first_value = 'value1'
     second_value = 'value2'
-    inputs = {
+    arguments = {
         'lock_files': lock_files,
         'key': key,
         'first_value': first_value,
@@ -90,8 +90,8 @@ def _test(context, executor, lock_files, func, expected_failure):
         node.service,
         interface_name,
         operation_name,
-        operation_kwargs=dict(implementation='{0}.{1}'.format(__name__, func.__name__),
-                              inputs=inputs)
+        operation_kwargs=dict(function='{0}.{1}'.format(__name__, func.__name__),
+                              arguments=arguments)
     )
     node.interfaces[interface.name] = interface
     context.model.node.update(node)
@@ -103,12 +103,12 @@ def _test(context, executor, lock_files, func, expected_failure):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs),
+                inputs=arguments),
             api.task.OperationTask(
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs)
+                inputs=arguments)
         )
 
     signal = events.on_failure_task_signal

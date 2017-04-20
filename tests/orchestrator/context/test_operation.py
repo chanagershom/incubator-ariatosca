@@ -78,14 +78,14 @@ def test_node_operation_task_execution(ctx, thread_executor, dataholder):
     interface_name = 'Standard'
     operation_name = 'create'
 
-    inputs = {'putput': True, 'holder_path': dataholder.path}
+    arguments = {'putput': True, 'holder_path': dataholder.path}
     node = ctx.model.node.get_by_name(mock.models.DEPENDENCY_NODE_NAME)
     interface = mock.models.create_interface(
         node.service,
         interface_name,
         operation_name,
-        operation_kwargs=dict(implementation=op_path(basic_node_operation, module_path=__name__),
-                              inputs=inputs)
+        operation_kwargs=dict(function=op_path(basic_node_operation, module_path=__name__),
+                              arguments=arguments)
     )
     node.interfaces[interface.name] = interface
     ctx.model.node.update(node)
@@ -97,7 +97,7 @@ def test_node_operation_task_execution(ctx, thread_executor, dataholder):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs
+                inputs=arguments
             )
         )
 
@@ -115,7 +115,7 @@ def test_node_operation_task_execution(ctx, thread_executor, dataholder):
     )
     operations = interface.operations
     assert len(operations) == 1
-    assert dataholder['implementation'] == operations.values()[0].implementation             # pylint: disable=no-member
+    assert dataholder['implementation'] == operations.values()[0].function             # pylint: disable=no-member
     assert dataholder['inputs']['putput'] is True
 
     # Context based attributes (sugaring)
@@ -127,15 +127,14 @@ def test_relationship_operation_task_execution(ctx, thread_executor, dataholder)
     interface_name = 'Configure'
     operation_name = 'post_configure'
 
-    inputs = {'putput': True, 'holder_path': dataholder.path}
+    arguments = {'putput': True, 'holder_path': dataholder.path}
     relationship = ctx.model.relationship.list()[0]
     interface = mock.models.create_interface(
         relationship.source_node.service,
         interface_name,
         operation_name,
-        operation_kwargs=dict(implementation=op_path(basic_relationship_operation,
-                                                     module_path=__name__),
-                              inputs=inputs),
+        operation_kwargs=dict(function=op_path(basic_relationship_operation, module_path=__name__),
+                              arguments=arguments),
     )
 
     relationship.interfaces[interface.name] = interface
@@ -148,7 +147,7 @@ def test_relationship_operation_task_execution(ctx, thread_executor, dataholder)
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs
+                inputs=arguments
             )
         )
 
@@ -160,7 +159,7 @@ def test_relationship_operation_task_execution(ctx, thread_executor, dataholder)
     assert dataholder['actor_name'] == relationship.name
     assert interface_name in dataholder['task_name']
     operations = interface.operations
-    assert dataholder['implementation'] == operations.values()[0].implementation           # pylint: disable=no-member
+    assert dataholder['implementation'] == operations.values()[0].function           # pylint: disable=no-member
     assert dataholder['inputs']['putput'] is True
 
     # Context based attributes (sugaring)
@@ -197,8 +196,8 @@ def test_invalid_task_operation_id(ctx, thread_executor, dataholder):
         node.service,
         interface_name=interface_name,
         operation_name=operation_name,
-        operation_kwargs=dict(implementation=op_path(get_node_id, module_path=__name__),
-                              inputs={'holder_path': dataholder.path})
+        operation_kwargs=dict(function=op_path(get_node_id, module_path=__name__),
+                              arguments={'holder_path': dataholder.path})
     )
     node.interfaces[interface.name] = interface
     ctx.model.node.update(node)
@@ -234,15 +233,15 @@ def test_plugin_workdir(ctx, thread_executor, tmpdir):
     node = ctx.model.node.get_by_name(mock.models.DEPENDENCY_NODE_NAME)
     filename = 'test_file'
     content = 'file content'
-    inputs = {'filename': filename, 'content': content}
+    arguments = {'filename': filename, 'content': content}
     interface = mock.models.create_interface(
         node.service,
         interface_name,
         operation_name,
         operation_kwargs=dict(
-            implementation='{0}.{1}'.format(__name__, _test_plugin_workdir.__name__),
+            function='{0}.{1}'.format(__name__, _test_plugin_workdir.__name__),
             plugin=plugin,
-            inputs=inputs)
+            arguments=arguments)
     )
     node.interfaces[interface.name] = interface
     ctx.model.node.update(node)
@@ -253,7 +252,7 @@ def test_plugin_workdir(ctx, thread_executor, tmpdir):
             node,
             interface_name=interface_name,
             operation_name=operation_name,
-            inputs=inputs))
+            inputs=arguments))
 
     execute(workflow_func=basic_workflow, workflow_context=ctx, executor=thread_executor)
     expected_file = tmpdir.join('workdir', 'plugins', str(ctx.service.id),
@@ -280,7 +279,7 @@ def test_node_operation_logging(ctx, executor):
 
     node = ctx.model.node.get_by_name(mock.models.DEPENDENCY_NODE_NAME)
 
-    inputs = {
+    arguments = {
         'op_start': 'op_start',
         'op_end': 'op_end',
     }
@@ -289,8 +288,8 @@ def test_node_operation_logging(ctx, executor):
         interface_name,
         operation_name,
         operation_kwargs=dict(
-            implementation=op_path(logged_operation, module_path=__name__),
-            inputs=inputs)
+            function=op_path(logged_operation, module_path=__name__),
+            arguments=arguments)
     )
     node.interfaces[interface.name] = interface
     ctx.model.node.update(node)
@@ -302,19 +301,19 @@ def test_node_operation_logging(ctx, executor):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs
+                inputs=arguments
             )
         )
 
     execute(workflow_func=basic_workflow, workflow_context=ctx, executor=executor)
-    _assert_loggins(ctx, inputs)
+    _assert_loggins(ctx, arguments)
 
 
 def test_relationship_operation_logging(ctx, executor):
     interface_name, operation_name = mock.operations.RELATIONSHIP_OPERATIONS_INSTALL[0]
 
     relationship = ctx.model.relationship.list()[0]
-    inputs = {
+    arguments = {
         'op_start': 'op_start',
         'op_end': 'op_end',
     }
@@ -322,8 +321,8 @@ def test_relationship_operation_logging(ctx, executor):
         relationship.source_node.service,
         interface_name,
         operation_name,
-        operation_kwargs=dict(implementation=op_path(logged_operation, module_path=__name__),
-                              inputs=inputs)
+        operation_kwargs=dict(function=op_path(logged_operation, module_path=__name__),
+                              arguments=arguments)
     )
     relationship.interfaces[interface.name] = interface
     ctx.model.relationship.update(relationship)
@@ -335,12 +334,12 @@ def test_relationship_operation_logging(ctx, executor):
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=inputs
+                inputs=arguments
             )
         )
 
     execute(workflow_func=basic_workflow, workflow_context=ctx, executor=executor)
-    _assert_loggins(ctx, inputs)
+    _assert_loggins(ctx, arguments)
 
 
 def _assert_loggins(ctx, inputs):

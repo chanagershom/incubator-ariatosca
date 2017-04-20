@@ -119,7 +119,7 @@ class WorkflowRunner(object):
         else:
             workflow_inputs = self.service.workflows[self._workflow_name].inputs
 
-        execution.inputs = modeling_utils.create_inputs(inputs, workflow_inputs)
+        execution.inputs = modeling_utils.create_parameters(inputs, workflow_inputs)
         # TODO: these two following calls should execute atomically
         self._validate_no_active_executions(execution)
         self._model_storage.execution.put(execution)

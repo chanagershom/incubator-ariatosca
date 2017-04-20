@@ -211,6 +211,10 @@ class ParameterBase(TemplateModelMixin, caching.HasCachedMethods):
         """
         Wraps an arbitrary value as a parameter. The type will be guessed via introspection.
 
+        For primitive types, we will prefer their TOSCA aliases. See the `TOSCA Simple Profile v1.0
+        cos01 specification <http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/cos01
+        /TOSCA-Simple-Profile-YAML-v1.0-cos01.html#_Toc373867862>`__
+
         :param name: Parameter name
         :type name: basestring
         :param value: Parameter value

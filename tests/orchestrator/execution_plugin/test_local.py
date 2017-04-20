@@ -461,7 +461,7 @@ if __name__ == '__main__':
              inputs=None):
         local_script_path = script_path
         script_path = os.path.basename(local_script_path) if local_script_path else ''
-        inputs = inputs or {}
+        arguments = inputs or {}
         process = process or {}
         if script_path:
             workflow_context.resource.service.upload(
@@ -469,7 +469,7 @@ if __name__ == '__main__':
                 source=local_script_path,
                 path=script_path)
 
-        inputs.update({
+        arguments.update({
             'script_path': script_path,
             'process': process,
             'input_as_env_var': env_var
@@ -483,17 +483,17 @@ if __name__ == '__main__':
                 'test',
                 'op',
                 operation_kwargs=dict(
-                    implementation='{0}.{1}'.format(
+                    function='{0}.{1}'.format(
                         operations.__name__,
                         operations.run_script_locally.__name__),
-                    inputs=inputs)
+                    arguments=arguments)
             )
             node.interfaces[interface.name] = interface
             graph.add_tasks(api.task.OperationTask(
                 node,
                 interface_name='test',
                 operation_name='op',
-                inputs=inputs))
+                inputs=arguments))
             return graph
         tasks_graph = mock_workflow(ctx=workflow_context)  # pylint: disable=no-value-for-parameter
         eng = engine.Engine(

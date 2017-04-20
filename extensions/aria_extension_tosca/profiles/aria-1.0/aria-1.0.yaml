@@ -52,18 +52,10 @@ policy_types:
       should be inherited and extended with additional properties.
     derived_from: tosca.policies.Root
     properties:
-      implementation:
+      function:
         description: >-
-          The interpretation of the implementation string depends on the orchestrator. In ARIA it is
-          the full path to a Python @workflow function that generates a task graph based on the
-          service topology.
+          The interpretation of the function string depends on the orchestrator. In ARIA it is the
+          full path to a Python @workflow function that generates a task graph based on the service
+          topology.
         type: string
         required: true
-      dependencies:
-        description: >-
-          The optional ordered list of one or more dependent or secondary implementation artifact
-          name which are referenced by the primary implementation artifact (e.g., a library the
-          script installs or a secondary script).
-        type: list
-        entry_schema: string
-        required: false

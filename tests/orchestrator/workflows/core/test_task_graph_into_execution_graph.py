@@ -32,7 +32,7 @@ def test_task_graph_into_execution_graph(tmpdir):
         node.service,
         interface_name,
         operation_name,
-        operation_kwargs={'implementation': 'test'}
+        operation_kwargs=dict(function='test')
     )
     node.interfaces[interface.name] = interface
     task_context.model.node.update(node)

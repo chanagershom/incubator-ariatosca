@@ -99,8 +99,8 @@ class OperationTask(BaseTask):
 
         operation = self.actor.interfaces[self.interface_name].operations[self.operation_name]
         self.plugin = operation.plugin
-        self.inputs = modeling_utils.create_inputs(inputs or {}, operation.inputs)
-        self.implementation = operation.implementation
+        self.inputs = modeling_utils.create_parameters(inputs or {}, operation.arguments)
+        self.implementation = operation.function
 
     def __repr__(self):
         return self.name
