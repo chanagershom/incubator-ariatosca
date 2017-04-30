@@ -41,6 +41,9 @@ def _task_started(task, *args, **kwargs):
         task.started_at = datetime.utcnow()
         task.status = task.STARTED
 
+@events.start_task_signal.connect
+def _node_task_started(task, *args, **kwargs):
+    with task._update():
         _update_node_state_if_necessary(task, is_transitional=True)
 
 

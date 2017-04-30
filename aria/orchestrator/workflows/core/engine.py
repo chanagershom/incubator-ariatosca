@@ -110,13 +110,11 @@ class Engine(logger.LoggerMixin):
                     self._workflow_context.model.task.refresh(task.model_task)
             yield task
 
-    def _handle_executable_task(self, task):
-        # import pydevd; pydevd.settrace('localhost', suspend=False)
-        if isinstance(task, engine_task.StubTask):
-            task.status = models.Task.SUCCESS
-        else:
+    @staticmethod
+    def _handle_executable_task(task):
+        if not isinstance(task, engine_task.MarkerTaskBase):
             events.sent_task_signal.send(task)
-            task.execute()
+        task.execute()
 
     def _handle_ended_tasks(self, task):
         if task.status == models.Task.FAILED and not task.ignore_failure:

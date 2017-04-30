@@ -49,9 +49,12 @@ def build_execution_graph(
             default=[start_task])
 
         if isinstance(api_task, api.task.OperationTask):
-            # Add the task an the dependencies
-            operation_task = core_task.OperationTask(api_task, executor=executor)
+            if api_task.is_stub:
+                operation_task = core_task.OperationTask(api_task)
+            else:
+                operation_task = core_task.OperationTask(api_task, executor=executor)
             _add_task_and_dependencies(execution_graph, operation_task, operation_dependencies)
+
         elif isinstance(api_task, api.task.WorkflowTask):
             # Build the graph recursively while adding start and end markers
             build_execution_graph(
@@ -62,9 +65,6 @@ def build_execution_graph(
                 end_cls=core_task.EndSubWorkflowTask,
                 depends_on=operation_dependencies
             )
-        elif isinstance(api_task, api.task.StubTask):
-            stub_task = core_task.StubTask(id=api_task.id)
-            _add_task_and_dependencies(execution_graph, stub_task, operation_dependencies)
         else:
             raise RuntimeError('Undefined state')
 
@@ -88,8 +88,7 @@ def _get_tasks_from_dependencies(execution_graph, dependencies, default=()):
     Returns task list from dependencies.
     """
     return [execution_graph.node[dependency.id
-                                 if isinstance(dependency, (api.task.OperationTask,
-                                                            api.task.StubTask))
+                                 if isinstance(dependency, api.task.OperationTask)
                                  else _end_graph_suffix(dependency.id)]['task']
             for dependency in dependencies] or default
 

@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ..api.task import OperationTask, StubTask
+from ..api.task import OperationTask
 from .. import exceptions
 
 
@@ -23,12 +23,10 @@ def create_node_task(node, interface_name, operation_name, **kwargs):
     """
 
     try:
-        if _is_empty_task(node, interface_name, operation_name):
-            return StubTask()
-
         return OperationTask.for_node(node=node,
                                       interface_name=interface_name,
                                       operation_name=operation_name,
+                                      is_stub=_is_empty_task(node, interface_name, operation_name),
                                       **kwargs)
     except exceptions.OperationNotFoundException:
         # We will skip nodes which do not have the operation
@@ -71,29 +69,29 @@ def relationship_tasks(relationship, interface_name, source_operation_name=None,
     operations = []
     if source_operation_name:
         try:
-            if _is_empty_task(relationship, interface_name, source_operation_name):
-                operations.append(StubTask())
-            else:
-                operations.append(
-                    OperationTask.for_relationship(relationship=relationship,
-                                                   interface_name=interface_name,
-                                                   operation_name=source_operation_name,
-                                                   **kwargs)
+            operations.append(
+                OperationTask.for_relationship(
+                    relationship=relationship,
+                    interface_name=interface_name,
+                    operation_name=source_operation_name,
+                    is_stub=_is_empty_task(relationship, interface_name, source_operation_name),
+                    **kwargs
                 )
+            )
         except exceptions.OperationNotFoundException:
             # We will skip relationships which do not have the operation
             pass
     if target_operation_name:
         try:
-            if _is_empty_task(relationship, interface_name, target_operation_name):
-                operations.append(StubTask())
-            else:
-                operations.append(
-                    OperationTask.for_relationship(relationship=relationship,
-                                                   interface_name=interface_name,
-                                                   operation_name=target_operation_name,
-                                                   **kwargs)
+            operations.append(
+                OperationTask.for_relationship(
+                    relationship=relationship,
+                    interface_name=interface_name,
+                    operation_name=target_operation_name,
+                    is_stub=_is_empty_task(relationship, interface_name, target_operation_name),
+                    **kwargs
                 )
+            )
         except exceptions.OperationNotFoundException:
             # We will skip relationships which do not have the operation
             pass

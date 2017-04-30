@@ -17,42 +17,32 @@
 Dry executor
 """
 
-from datetime import datetime
-
 from aria.orchestrator import events
 from .base import BaseExecutor
 
 
 # TODO: the name of this module should definitely change
 
-class StubExecutor(BaseExecutor):
-
-    @staticmethod
-    def _task_sent(*args, **kwargs):
-        pass
-
-    @staticmethod
-    def _task_started(task):
-        events.start_task_signal.send(task, skip_logging=True)
-
-    @staticmethod
-    def _task_succeeded(task):
-        events.on_success_task_signal.send(task, skip_logging=True)
-
-    @staticmethod
-    def _task_failed(*args, **kwargs):
-        pass
-
+class MarkerExecutor(BaseExecutor):
     def execute(self, task):
-        pass
+        task.start()
+        task.end()
 
 
-class DryExecutor(StubExecutor):
+class StubExecutor(BaseExecutor):
+    def execute(self, task):
+        events.start_task_signal.send(task)
+        events.on_success_task_signal.send(task)
+
+
+class DryExecutor(BaseExecutor):
     """
     Executor which dry runs tasks - prints task information without causing any side effects
     """
 
     def execute(self, task):
+        events.start_task_signal.send(task, skip_logging=True)
+
         if hasattr(task.actor, 'source_node'):
             name = '{source_node.name}->{target_node.name}'.format(
                 source_node=task.actor.source_node, target_node=task.actor.target_node)
@@ -66,3 +56,5 @@ class DryExecutor(StubExecutor):
         task.context.logger.info(
             '<dry> {name} {task.interface_name}.{task.operation_name} successful'
             .format(name=name, task=task))
+
+        events.on_success_task_signal.send(task, skip_logging=True)

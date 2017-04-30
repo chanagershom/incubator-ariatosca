@@ -17,6 +17,7 @@ from networkx import topological_sort, DiGraph
 
 from aria.orchestrator import context
 from aria.orchestrator.workflows import api, core
+from aria.orchestrator.workflows.executor import dry
 
 from tests import mock
 from tests import storage
@@ -63,7 +64,8 @@ def test_task_graph_into_execution_graph(tmpdir):
     # Direct check
     execution_graph = DiGraph()
     core.translation.build_execution_graph(task_graph=test_task_graph,
-                                           execution_graph=execution_graph)
+                                           execution_graph=execution_graph,
+                                           executor=dry.MarkerExecutor())
     execution_tasks = topological_sort(execution_graph)
 
     assert len(execution_tasks) == 7

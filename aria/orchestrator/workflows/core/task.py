@@ -64,15 +64,17 @@ class BaseTask(object):
         return self._id
 
 
-class StubTask(BaseTask):
+class MarkerTaskBase(BaseTask):
     """
-    Base stub task for all tasks that don't actually run anything
+    Base stub task for marker user tasks that only mark the start/end of a workflow
+    or sub-workflow
     """
-
     def __init__(self, *args, **kwargs):
-        super(StubTask, self).__init__(executor=dry.StubExecutor(), *args, **kwargs)
+        super(MarkerTaskBase, self).__init__(executor=dry.MarkerExecutor(), *args, **kwargs)
         self.status = models.Task.PENDING
         self.due_at = datetime.utcnow()
+        self.started_at = None
+        self.ended_at = None
 
     def has_ended(self):
         return self.status in (models.Task.SUCCESS, models.Task.FAILED)
@@ -80,29 +82,37 @@ class StubTask(BaseTask):
     def is_waiting(self):
         return self.status in (models.Task.PENDING, models.Task.RETRYING)
 
+    def end(self):
+        self.ended_at = datetime.utcnow()
+        self.status = models.Task.SUCCESS
 
-class StartWorkflowTask(StubTask):
+    def start(self):
+        self.started_at = datetime.utcnow()
+        self.status = models.Task.STARTED
+
+
+class StartWorkflowTask(MarkerTaskBase):
     """
     Task marking a workflow start
     """
     pass
 
 
-class EndWorkflowTask(StubTask):
+class EndWorkflowTask(MarkerTaskBase):
     """
     Task marking a workflow end
     """
     pass
 
 
-class StartSubWorkflowTask(StubTask):
+class StartSubWorkflowTask(MarkerTaskBase):
     """
     Task marking a subworkflow start
     """
     pass
 
 
-class EndSubWorkflowTask(StubTask):
+class EndSubWorkflowTask(MarkerTaskBase):
     """
     Task marking a subworkflow end
     """
@@ -113,15 +123,18 @@ class OperationTask(BaseTask):
     """
     Operation task
     """
+    def __init__(self, api_task, executor=None, *args, **kwargs):
+        # If no executor is provided, we defer that this is a stub task which does not need to be
+        # executed.
+        super(OperationTask, self).__init__(
+            id=api_task.id, executor=executor or dry.StubExecutor(), *args, **kwargs)
 
-    def __init__(self, api_task, *args, **kwargs):
-        super(OperationTask, self).__init__(id=api_task.id, **kwargs)
         self._workflow_context = api_task._workflow_context
         self.interface_name = api_task.interface_name
         self.operation_name = api_task.operation_name
         model_storage = api_task._workflow_context.model
-        plugin = api_task.plugin
 
+        # This currently signal that this is a stub task
         base_task_model = model_storage.task.model_cls
         if isinstance(api_task.actor, models.Node):
             context_cls = operation_context.NodeOperationContext
@@ -141,15 +154,18 @@ class OperationTask(BaseTask):
 
         task_model = create_task_model(
             name=api_task.name,
-            implementation=api_task.implementation,
             actor=api_task.actor,
-            inputs=api_task.inputs,
             status=base_task_model.PENDING,
             max_attempts=api_task.max_attempts,
             retry_interval=api_task.retry_interval,
             ignore_failure=api_task.ignore_failure,
-            plugin=plugin,
-            execution=self._workflow_context.execution
+            execution=self._workflow_context.execution,
+
+            # Only non-stub tasks have these fields
+            plugin=getattr(api_task, 'plugin', None),
+            implementation=getattr(api_task, 'implementation', None),
+            inputs=getattr(api_task, 'inputs', {}),
+
         )
         self._workflow_context.model.task.put(task_model)
 

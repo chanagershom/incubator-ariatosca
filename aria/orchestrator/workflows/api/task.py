@@ -66,7 +66,8 @@ class OperationTask(BaseTask):
                  inputs=None,
                  max_attempts=None,
                  retry_interval=None,
-                 ignore_failure=None):
+                 ignore_failure=None,
+                 is_stub=False):
         """
         Do not call this constructor directly. Instead, use :meth:`for_node` or
         :meth:`for_relationship`.
@@ -87,15 +88,18 @@ class OperationTask(BaseTask):
                                if ignore_failure is None else ignore_failure)
         self.interface_name = interface_name
         self.operation_name = operation_name
+        self.name = OperationTask.NAME_FORMAT.format(type=actor_type,
+                                                     name=actor.name,
+                                                     interface=self.interface_name,
+                                                     operation=self.operation_name)
+        self.is_stub = is_stub
+        if self.is_stub:
+            return
 
         operation = self.actor.interfaces[self.interface_name].operations[self.operation_name]
         self.plugin = operation.plugin
         self.inputs = modeling_utils.create_inputs(inputs or {}, operation.inputs)
         self.implementation = operation.implementation
-        self.name = OperationTask.NAME_FORMAT.format(type=actor_type,
-                                                     name=actor.name,
-                                                     interface=self.interface_name,
-                                                     operation=self.operation_name)
 
     def __repr__(self):
         return self.name
@@ -108,7 +112,8 @@ class OperationTask(BaseTask):
                  max_attempts=None,
                  retry_interval=None,
                  ignore_failure=None,
-                 inputs=None):
+                 inputs=None,
+                 is_stub=False):
         """
         Creates an operation on a node.
 
@@ -132,7 +137,9 @@ class OperationTask(BaseTask):
             max_attempts=max_attempts,
             retry_interval=retry_interval,
             ignore_failure=ignore_failure,
-            inputs=inputs)
+            inputs=inputs,
+            is_stub=is_stub
+        )
 
     @classmethod
     def for_relationship(cls,
@@ -142,7 +149,8 @@ class OperationTask(BaseTask):
                          max_attempts=None,
                          retry_interval=None,
                          ignore_failure=None,
-                         inputs=None):
+                         inputs=None,
+                         is_stub=False):
         """
         Creates an operation on a relationship edge.
 
@@ -166,7 +174,9 @@ class OperationTask(BaseTask):
             max_attempts=max_attempts,
             retry_interval=retry_interval,
             ignore_failure=ignore_failure,
-            inputs=inputs)
+            inputs=inputs,
+            is_stub=is_stub
+        )
 
 
 class WorkflowTask(BaseTask):
@@ -197,9 +207,3 @@ class WorkflowTask(BaseTask):
             return getattr(self._graph, item)
         except AttributeError:
             return super(WorkflowTask, self).__getattribute__(item)
-
-
-class StubTask(BaseTask):
-    """
-    Enables creating empty tasks.
-    """
