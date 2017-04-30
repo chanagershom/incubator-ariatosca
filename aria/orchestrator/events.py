@@ -28,6 +28,14 @@ start_task_signal = signal('start_task_signal')
 on_success_task_signal = signal('success_task_signal')
 on_failure_task_signal = signal('failure_task_signal')
 
+# node state signals:
+# Note that each signal corresponds with a task. The basic start_task_signal also changes the state
+# of the node on which it runs. (so does the on_success_task_signal and the on_failure_task_signal)
+start_node_signal = signal('start_task_signal')
+on_success_node_signal = signal('success_task_signal')
+on_failure_node_signal = signal('failure_task_signal')
+
+
 # workflow engine workflow signals:
 start_workflow_signal = signal('start_workflow_signal')
 on_cancelling_workflow_signal = signal('on_cancelling_workflow_signal')

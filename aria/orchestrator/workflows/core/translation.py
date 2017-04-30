@@ -24,6 +24,7 @@ from . import task as core_task
 def build_execution_graph(
         task_graph,
         execution_graph,
+        executor,
         start_cls=core_task.StartWorkflowTask,
         end_cls=core_task.EndWorkflowTask,
         depends_on=()):
@@ -49,13 +50,14 @@ def build_execution_graph(
 
         if isinstance(api_task, api.task.OperationTask):
             # Add the task an the dependencies
-            operation_task = core_task.OperationTask(api_task)
+            operation_task = core_task.OperationTask(api_task, executor=executor)
             _add_task_and_dependencies(execution_graph, operation_task, operation_dependencies)
         elif isinstance(api_task, api.task.WorkflowTask):
             # Build the graph recursively while adding start and end markers
             build_execution_graph(
                 task_graph=api_task,
                 execution_graph=execution_graph,
+                executor=executor,
                 start_cls=core_task.StartSubWorkflowTask,
                 end_cls=core_task.EndSubWorkflowTask,
                 depends_on=operation_dependencies

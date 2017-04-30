@@ -30,7 +30,8 @@ def test_hello_world(testenv):
         # Even if some assertions failed, attempt to execute uninstall so the
         # webserver process doesn't stay up once the test is finished
         # TODO: remove force_service_delete=True
-        testenv.uninstall_service(force_service_delete=True)
+        pass
+        # testenv.uninstall_service(force_service_delete=True)
 
     _verify_webserver_down('http://localhost:9090')
     testenv.verify_clean_storage()

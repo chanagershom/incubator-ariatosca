@@ -40,6 +40,10 @@ class BaseExecutor(logger.LoggerMixin):
         pass
 
     @staticmethod
+    def _task_sent(task):
+        events.sent_task_signal.send(task)
+
+    @staticmethod
     def _task_started(task):
         events.start_task_signal.send(task)
 

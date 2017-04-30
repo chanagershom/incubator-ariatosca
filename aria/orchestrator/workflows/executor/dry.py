@@ -19,21 +19,40 @@ Dry executor
 
 from datetime import datetime
 
+from aria.orchestrator import events
 from .base import BaseExecutor
 
 
-class DryExecutor(BaseExecutor):
+# TODO: the name of this module should definitely change
+
+class StubExecutor(BaseExecutor):
+
+    @staticmethod
+    def _task_sent(*args, **kwargs):
+        pass
+
+    @staticmethod
+    def _task_started(task):
+        events.start_task_signal.send(task, skip_logging=True)
+
+    @staticmethod
+    def _task_succeeded(task):
+        events.on_success_task_signal.send(task, skip_logging=True)
+
+    @staticmethod
+    def _task_failed(*args, **kwargs):
+        pass
+
+    def execute(self, task):
+        pass
+
+
+class DryExecutor(StubExecutor):
     """
     Executor which dry runs tasks - prints task information without causing any side effects
     """
 
     def execute(self, task):
-        # updating the task manually instead of calling self._task_started(task),
-        # to avoid any side effects raising that event might cause
-        with task._update():
-            task.started_at = datetime.utcnow()
-            task.status = task.STARTED
-
         if hasattr(task.actor, 'source_node'):
             name = '{source_node.name}->{target_node.name}'.format(
                 source_node=task.actor.source_node, target_node=task.actor.target_node)
@@ -47,9 +66,3 @@ class DryExecutor(BaseExecutor):
         task.context.logger.info(
             '<dry> {name} {task.interface_name}.{task.operation_name} successful'
             .format(name=name, task=task))
-
-        # updating the task manually instead of calling self._task_succeeded(task),
-        # to avoid any side effects raising that event might cause
-        with task._update():
-            task.ended_at = datetime.utcnow()
-            task.status = task.SUCCESS

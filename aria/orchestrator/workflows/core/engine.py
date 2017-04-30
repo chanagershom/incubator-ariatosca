@@ -44,7 +44,8 @@ class Engine(logger.LoggerMixin):
         self._execution_graph = networkx.DiGraph()
         self._executor = executor
         translation.build_execution_graph(task_graph=tasks_graph,
-                                          execution_graph=self._execution_graph)
+                                          execution_graph=self._execution_graph,
+                                          executor=self._executor)
 
     def execute(self):
         """
@@ -110,11 +111,12 @@ class Engine(logger.LoggerMixin):
             yield task
 
     def _handle_executable_task(self, task):
+        # import pydevd; pydevd.settrace('localhost', suspend=False)
         if isinstance(task, engine_task.StubTask):
             task.status = models.Task.SUCCESS
         else:
             events.sent_task_signal.send(task)
-            self._executor.execute(task)
+            task.execute()
 
     def _handle_ended_tasks(self, task):
         if task.status == models.Task.FAILED and not task.ignore_failure:

@@ -28,6 +28,7 @@ from functools import (
 from ....modeling import models
 from ...context import operation as operation_context
 from .. import exceptions
+from ..executor import dry
 
 
 def _locked(func=None):
@@ -47,9 +48,13 @@ class BaseTask(object):
     Base class for Task objects
     """
 
-    def __init__(self, id, *args, **kwargs):
+    def __init__(self, id, executor, *args, **kwargs):
         super(BaseTask, self).__init__(*args, **kwargs)
         self._id = id
+        self._executor = executor
+
+    def execute(self):
+        self._executor.execute(self)
 
     @property
     def id(self):
@@ -65,7 +70,7 @@ class StubTask(BaseTask):
     """
 
     def __init__(self, *args, **kwargs):
-        super(StubTask, self).__init__(*args, **kwargs)
+        super(StubTask, self).__init__(executor=dry.StubExecutor(), *args, **kwargs)
         self.status = models.Task.PENDING
         self.due_at = datetime.utcnow()
 
@@ -127,6 +132,12 @@ class OperationTask(BaseTask):
         else:
             raise RuntimeError('No operation context could be created for {actor.model_cls}'
                                .format(actor=api_task.actor))
+
+        # TODO: this executor should be put into the task (if no executor was setup in the
+        # operation)
+        # executor = '{module}.{name}'.format(module=self._executor.__module__,
+        #                                     name=self._executor.__class__.__name__
+        #                                    )
 
         task_model = create_task_model(
             name=api_task.name,

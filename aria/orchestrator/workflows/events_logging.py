@@ -34,19 +34,25 @@ def _get_task_name(task):
 
 
 @events.start_task_signal.connect
-def _start_task_handler(task, **kwargs):
+def _start_task_handler(task, skip_logging=False, **kwargs):
+    if skip_logging:
+        return
     task.context.logger.info('{name} {task.interface_name}.{task.operation_name} started...'
                              .format(name=_get_task_name(task), task=task))
 
 
 @events.on_success_task_signal.connect
-def _success_task_handler(task, **kwargs):
+def _success_task_handler(task, skip_logging=False, **kwargs):
+    if skip_logging:
+        return
     task.context.logger.info('{name} {task.interface_name}.{task.operation_name} successful'
                              .format(name=_get_task_name(task), task=task))
 
 
 @events.on_failure_task_signal.connect
-def _failure_operation_handler(task, traceback, **kwargs):
+def _failure_operation_handler(task, traceback, skip_logging=False, **kwargs):
+    if skip_logging:
+        return
     task.context.logger.error(
         '{name} {task.interface_name}.{task.operation_name} failed'
         .format(name=_get_task_name(task), task=task), extra=dict(traceback=traceback)
