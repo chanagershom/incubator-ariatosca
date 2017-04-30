@@ -23,11 +23,11 @@ def create_node_task(node, interface_name, operation_name, **kwargs):
     """
 
     try:
-        return OperationTask.for_node(node=node,
-                                      interface_name=interface_name,
-                                      operation_name=operation_name,
-                                      is_stub=_is_empty_task(node, interface_name, operation_name),
-                                      **kwargs)
+        return OperationTask(node,
+                             interface_name=interface_name,
+                             operation_name=operation_name,
+                             is_stub=_is_empty_task(node, interface_name, operation_name),
+                             **kwargs)
     except exceptions.OperationNotFoundException:
         # We will skip nodes which do not have the operation
         return None
@@ -70,8 +70,8 @@ def relationship_tasks(relationship, interface_name, source_operation_name=None,
     if source_operation_name:
         try:
             operations.append(
-                OperationTask.for_relationship(
-                    relationship=relationship,
+                OperationTask(
+                    relationship,
                     interface_name=interface_name,
                     operation_name=source_operation_name,
                     is_stub=_is_empty_task(relationship, interface_name, source_operation_name),
@@ -84,8 +84,8 @@ def relationship_tasks(relationship, interface_name, source_operation_name=None,
     if target_operation_name:
         try:
             operations.append(
-                OperationTask.for_relationship(
-                    relationship=relationship,
+                OperationTask(
+                    relationship,
                     interface_name=interface_name,
                     operation_name=target_operation_name,
                     is_stub=_is_empty_task(relationship, interface_name, target_operation_name),

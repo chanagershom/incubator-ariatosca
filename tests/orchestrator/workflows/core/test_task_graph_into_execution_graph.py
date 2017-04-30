@@ -42,17 +42,20 @@ def test_task_graph_into_execution_graph(tmpdir):
 
     with context.workflow.current.push(task_context):
         test_task_graph = api.task.WorkflowTask(sub_workflow, name='test_task_graph')
-        simple_before_task = api.task.OperationTask.for_node(node=node,
-                                                             interface_name=interface_name,
-                                                             operation_name=operation_name)
-        simple_after_task = api.task.OperationTask.for_node(node=node,
-                                                            interface_name=interface_name,
-                                                            operation_name=operation_name)
+        simple_before_task = api.task.OperationTask(
+            node,
+            interface_name=interface_name,
+            operation_name=operation_name)
+        simple_after_task = api.task.OperationTask(
+            node,
+            interface_name=interface_name,
+            operation_name=operation_name)
 
         inner_task_graph = api.task.WorkflowTask(sub_workflow, name='test_inner_task_graph')
-        inner_task = api.task.OperationTask.for_node(node=node,
-                                                     interface_name=interface_name,
-                                                     operation_name=operation_name)
+        inner_task = api.task.OperationTask(
+            node,
+            interface_name=interface_name,
+            operation_name=operation_name)
         inner_task_graph.add_tasks(inner_task)
 
     test_task_graph.add_tasks(simple_before_task)
