@@ -194,3 +194,242 @@ class BaseContext(object):
         variables.setdefault('ctx', self)
         resource_template = jinja2.Template(resource_content)
         return resource_template.render(variables)
+
+    def _teardown_db_resources(self):
+        self.model.log._session.close()
+        self.model.log._engine.dispose()
+
+
+class _InstrumentedCollection(object):
+
+    def __init__(self,
+                 model,
+                 parent,
+                 field_name=None,
+                 item_cls=None,
+                 seq=None,
+                 is_top_level=True,
+                 **kwargs):
+        self._model = model
+        self._parent = parent
+        self._field_name = field_name
+        self._item_cls = item_cls
+        self._is_top_level = is_top_level
+        self._load(seq, **kwargs)
+
+    @property
+    def _raw(self):
+        raise NotImplementedError
+
+    def _load(self, seq, **kwargs):
+        """
+        Instantiates the object from existing seq.
+
+        :param seq: the original sequence to load from
+        :return:
+        """
+        raise NotImplementedError
+
+    def _set(self, key, value):
+        """
+        set the changes for the current object (not in the db)
+
+        :param key:
+        :param value:
+        :return:
+        """
+        raise NotImplementedError
+
+    def _del(self, collection, key):
+        raise NotImplementedError
+
+    def _instrument(self, key, value):
+        """
+        Instruments any collection to track changes (and ease of access)
+        :param key:
+        :param value:
+        :return:
+        """
+        if isinstance(value, _InstrumentedCollection):
+            return value
+        elif isinstance(value, dict):
+            instrumentation_cls = _InstrumentedDict
+        elif isinstance(value, list):
+            instrumentation_cls = _InstrumentedList
+        else:
+            return value
+
+        return instrumentation_cls(self._model, self, key, self._item_cls, value, False)
+
+    def _raw_value(self, value):
+        """
+        Get the raw value.
+        :param value:
+        :return:
+        """
+        if self._is_top_level and isinstance(value, self._item_cls):
+            return value.value
+        return value
+
+    def _encapsulate_value(self, key, value):
+        """
+        Create a new item cls if needed.
+        :param key:
+        :param value:
+        :return:
+        """
+        if isinstance(value, self._item_cls):
+            return value
+        # If it is not wrapped
+        return self._item_cls.wrap(key, value)
+
+    def __setitem__(self, key, value):
+        """
+        Update the values in both the local and the db locations.
+        :param key:
+        :param value:
+        :return:
+        """
+        self._set(key, value)
+        if self._is_top_level:
+            # We are at the top level
+            field = getattr(self._parent, self._field_name)
+            mapi = getattr(self._model, self._item_cls.__modelname__)
+            value = self._set_field(field,
+                                    key,
+                                    value if key in field else self._encapsulate_value(key, value))
+            mapi.update(value)
+        else:
+            # We are not at the top level
+            self._set_field(self._parent, self._field_name, self)
+
+    def _set_field(self, collection, key, value):
+        """
+        enables updating the current change in the ancestors
+        :param collection: the collection to change
+        :param key: the key for the specific field
+        :param value: the new value
+        :return:
+        """
+        if isinstance(value, _InstrumentedCollection):
+            value = value._raw
+        if key in collection and isinstance(collection[key], self._item_cls):
+            if isinstance(collection[key], self.PYTHON_TYPE):
+                self._del(collection, key)
+            collection[key].value = value
+        else:
+            collection[key] = value
+        return collection[key]
+
+    def __copy__(self):
+        return self._raw
+
+    def __deepcopy__(self, *args, **kwargs):
+        return self._raw
+
+
+class _InstrumentedDict(_InstrumentedCollection, dict):
+
+    PYTHON_TYPE = dict
+
+    def _load(self, dict_=None, **kwargs):
+        dict.__init__(
+            self,
+            tuple((key, self._raw_value(value)) for key, value in (dict_ or {}).items()),
+            **kwargs)
+
+    def update(self, dict_=None, **kwargs):
+        dict_ = dict_ or {}
+        for key, value in dict_.items():
+            self[key] = value
+        for key, value in kwargs.items():
+            self[key] = value
+
+    def __getitem__(self, key):
+        return self._instrument(key, dict.__getitem__(self, key))
+
+    def values(self):
+        return [self[key] for key in self.keys()]
+
+    def items(self):
+        return [(key, self[key]) for key in self.keys()]
+
+    def __iter__(self):
+        return (key for key in self.keys())
+
+    def _set(self, key, value):
+        dict.__setitem__(self, key, self._raw_value(value))
+
+    @property
+    def _raw(self):
+        return dict(self)
+
+    def _del(self, collection, key):
+        collection[key].clear()
+
+
+class _InstrumentedList(_InstrumentedCollection, list):
+
+    PYTHON_TYPE = list
+
+    def _load(self, list_=None, **kwargs):
+        list.__init__(self, list(item for item in list_ or []))
+
+    def append(self, value):
+        self.insert(len(self), value)
+
+    def insert(self, index, value):
+        list.insert(self, index, self._raw_value(value))
+        if self._is_top_level:
+            field = getattr(self._parent, self._field_name)
+            field.insert(index, self._encapsulate_value(index, value))
+        else:
+            self._parent[self._field_name] = self
+
+    def __getitem__(self, key):
+        return self._instrument(key, list.__getitem__(self, key))
+
+    def _set(self, key, value):
+        list.__setitem__(self, key, value)
+
+    def _del(self, collection, key):
+        del collection[key]
+
+    @property
+    def _raw(self):
+        return list(self)
+
+
+class InstrumentCollection(object):
+
+    def __init__(self, field_name):
+        super(InstrumentCollection, self).__init__()
+        self._field_name = field_name
+        self._actor = None
+
+    @property
+    def actor(self):
+        return self._actor
+
+    def __getattr__(self, item):
+        try:
+            return getattr(self._actor, item)
+        except AttributeError:
+            return super(InstrumentCollection, self).__getattribute__(item)
+
+    def __call__(self, func, *args, **kwargs):
+        def _wrapper(func_self, *args, **kwargs):
+            self._actor = func(func_self, *args, **kwargs)
+            field = getattr(self._actor, self._field_name)
+
+            # Preserve the original value
+            setattr(self, '_{0}'.format(self._field_name), field)
+
+            # set instrumented value
+            setattr(self, self._field_name, _InstrumentedDict(func_self.model,
+                                                              self._actor,
+                                                              self._field_name,
+                                                              modeling.models.Parameter,
+                                                              field))
+            return self
+        return _wrapper

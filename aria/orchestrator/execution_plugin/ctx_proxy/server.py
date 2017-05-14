@@ -127,6 +127,7 @@ class CtxProxy(object):
                 result_type = 'stop_operation'
             result = {'type': result_type, 'payload': payload}
         except Exception as e:
+            self.ctx.model.log._session.rollback()
             traceback_out = StringIO.StringIO()
             traceback.print_exc(file=traceback_out)
             payload = {
