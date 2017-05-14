@@ -334,7 +334,8 @@ def _patch_ctx(ctx, messenger, instrument):
         original_refresh(target)
 
     def patched_commit():
-        messenger.apply_tracked_changes(instrument.tracked_changes, instrument.new_instances)
+        messenger.apply_tracked_changes(instrument.tracked_changes,
+                                        instrument.new_instances_as_dict)
         instrument.expunge_session()
         instrument.clear()
 
@@ -388,11 +389,11 @@ def _main():
                 task_func = decorate(task_func)
             task_func(ctx=ctx, **operation_inputs)
             messenger.succeeded(tracked_changes=instrument.tracked_changes,
-                                new_instances=instrument.new_instances)
+                                new_instances=instrument.new_instances_as_dict)
         except BaseException as e:
             messenger.failed(exception=e,
                              tracked_changes=instrument.tracked_changes,
-                             new_instances=instrument.new_instances)
+                             new_instances=instrument.new_instances_as_dict)
         finally:
             instrument.expunge_session()
 

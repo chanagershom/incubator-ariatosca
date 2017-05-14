@@ -67,6 +67,13 @@ class FilesystemDataHolder(object):
         self._dump(dict_)
         return return_value
 
+    def update(self, dict_=None, **kwargs):
+        current_dict = self._load()
+        if dict_:
+            current_dict.update(dict_)
+        current_dict.update(**kwargs)
+        self._dump(current_dict)
+
     @property
     def path(self):
         return self._path

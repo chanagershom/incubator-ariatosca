@@ -25,13 +25,18 @@ from ..storage.exceptions import StorageError
 
 _VERSION_ID_COL = 'version'
 _STUB = object()
+_Collection = type('_Collection', (object, ), {})
+
+collection = _Collection()
 _INSTRUMENTED = {
     'modified': {
-        _models.Node.runtime_properties: dict,
         _models.Node.state: str,
         _models.Task.status: str,
+        _models.Node.attributes: collection,
+        # TODO: add support for pickled type
+        # _models.Parameter._value: some_type
     },
-    'new': (_models.Log, )
+    'new': (_models.Log, ),
 
 }
 
@@ -70,7 +75,7 @@ class _Instrumentation(object):
 
     def __init__(self, model, instrumented):
         self.tracked_changes = {}
-        self.new_instances = {}
+        self.new_instances_as_dict = {}
         self.listeners = []
         self._instances_to_expunge = []
         self._model = model
@@ -93,24 +98,25 @@ class _Instrumentation(object):
 
     def _track_changes(self, instrumented):
         instrumented_attribute_classes = {}
+        # Track any newly created instances.
+        for instrumented_class in instrumented.get('new', []):
+            self._register_new_instance_listener(instrumented_class)
+
         # Track any newly-set attributes.
         for instrumented_attribute, attribute_type in instrumented.get('modified', {}).items():
-            self._register_set_attribute_listener(
-                instrumented_attribute=instrumented_attribute,
-                attribute_type=attribute_type)
-            instrumented_class = instrumented_attribute.parent.entity
-            instrumented_class_attributes = instrumented_attribute_classes.setdefault(
-                instrumented_class, {})
-            instrumented_class_attributes[instrumented_attribute.key] = attribute_type
+            self._register_attribute_listener(instrumented_attribute=instrumented_attribute,
+                                              attribute_type=attribute_type)
+            # TODO: Revisit this, why not?
+            if not isinstance(attribute_type, _Collection):
+                instrumented_class = instrumented_attribute.parent.entity
+                instrumented_class_attributes = instrumented_attribute_classes.setdefault(
+                    instrumented_class, {})
+                instrumented_class_attributes[instrumented_attribute.key] = attribute_type
 
         # Track any global instance update such as 'refresh' or 'load'
         for instrumented_class, instrumented_attributes in instrumented_attribute_classes.items():
             self._register_instance_listeners(instrumented_class=instrumented_class,
                                               instrumented_attributes=instrumented_attributes)
-
-        # Track any newly created instances.
-        for instrumented_class in instrumented.get('new', {}):
-            self._register_new_instance_listener(instrumented_class)
 
     def _register_new_instance_listener(self, instrumented_class):
         if self._model is None:
@@ -120,7 +126,7 @@ class _Instrumentation(object):
             if not isinstance(instance, instrumented_class):
                 return
             self._instances_to_expunge.append(instance)
-            tracked_instances = self.new_instances.setdefault(instance.__modelname__, {})
+            tracked_instances = self.new_instances_as_dict.setdefault(instance.__modelname__, {})
             tracked_attributes = tracked_instances.setdefault(self._new_instance_id, {})
             instance_as_dict = instance.to_dict()
             instance_as_dict.update((k, getattr(instance, k))
@@ -128,6 +134,28 @@ class _Instrumentation(object):
             tracked_attributes.update(instance_as_dict)
         session = self._get_session_from_model(instrumented_class.__tablename__)
         listener_args = (session, 'after_attach', listener)
+        sqlalchemy.event.listen(*listener_args)
+        self.listeners.append(listener_args)
+
+    def _register_attribute_listener(self, instrumented_attribute, attribute_type):
+        # Track and newly created instances that are a part of a collection.
+        if isinstance(attribute_type, _Collection):
+            return self._register_append_to_attribute_listener(instrumented_attribute)
+        else:
+            return self._register_set_attribute_listener(instrumented_attribute, attribute_type)
+
+    def _register_append_to_attribute_listener(self, collection_attr):
+        def listener(target, value, initiator):
+            tracked_instances = self.tracked_changes.setdefault(target.__modelname__, {})
+            tracked_attributes = tracked_instances.setdefault(target.id, {})
+            collection = tracked_attributes.setdefault(initiator.key, [])
+            instance_as_dict = value.to_dict()
+            instance_as_dict.update((k, getattr(value, k))
+                                    for k in getattr(value, '__private_fields__', []))
+            instance_as_dict['_MODEL_CLS'] = value.__modelname__
+            collection.append(instance_as_dict)
+
+        listener_args = (collection_attr, 'append', listener)
         sqlalchemy.event.listen(*listener_args)
         self.listeners.append(listener_args)
 
@@ -179,7 +207,7 @@ class _Instrumentation(object):
         else:
             self.tracked_changes.clear()
 
-        self.new_instances.clear()
+        self.new_instances_as_dict.clear()
         self._instances_to_expunge = []
 
     def restore(self):
@@ -230,27 +258,39 @@ def apply_tracked_changes(tracked_changes, new_instances, model):
         for mapi_name, tracked_instances in tracked_changes.items():
             successfully_updated_changes[mapi_name] = dict()
             mapi = getattr(model, mapi_name)
+
+            # Handle new instances
+            for mapi_name, new_instance in new_instances.items():
+                successfully_updated_changes[mapi_name] = dict()
+                mapi = getattr(model, mapi_name)
+                for tmp_id, new_instance_kwargs in new_instance.items():
+                    instance = mapi.model_cls(**new_instance_kwargs)
+                    mapi.put(instance)
+                    successfully_updated_changes[mapi_name][instance.id] = new_instance_kwargs
+                    new_instance[tmp_id] = instance
+
             for instance_id, tracked_attributes in tracked_instances.items():
                 successfully_updated_changes[mapi_name][instance_id] = dict()
                 instance = None
                 for attribute_name, value in tracked_attributes.items():
-                    if value.initial != value.current:
-                        instance = instance or mapi.get(instance_id)
+                    instance = instance or mapi.get(instance_id)
+                    if isinstance(value, list):
+                        # The changes are new item to a collection
+                        for item in value:
+                            model_name = item.pop('_MODEL_CLS')
+                            attr_model = getattr(model, model_name).model_cls
+                            new_attr = attr_model(**item)
+                            getattr(instance, attribute_name)[new_attr] = new_attr
+                    elif value.initial != value.current:
+                        # scalar attribute
                         setattr(instance, attribute_name, value.current)
                 if instance:
                     _validate_version_id(instance, mapi)
                     mapi.update(instance)
-                    successfully_updated_changes[mapi_name][instance_id] = [
-                        v.dict for v in tracked_attributes.values()]
+                    # TODO: reinstate this
+                    # successfully_updated_changes[mapi_name][instance_id] = [
+                    #     v.dict for v in tracked_attributes.values()]
 
-        # Handle new instances
-        for mapi_name, new_instance in new_instances.items():
-            successfully_updated_changes[mapi_name] = dict()
-            mapi = getattr(model, mapi_name)
-            for new_instance_kwargs in new_instance.values():
-                instance = mapi.model_cls(**new_instance_kwargs)
-                mapi.put(instance)
-                successfully_updated_changes[mapi_name][instance.id] = new_instance_kwargs
     except BaseException:
         for key, value in successfully_updated_changes.items():
             if not value:
