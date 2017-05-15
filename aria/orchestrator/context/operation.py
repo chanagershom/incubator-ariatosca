@@ -80,9 +80,9 @@ class _DecorateAttributes(object):
 
     def __call__(self, *args, **kwargs):
         func_self = args[0]
-        actor = self._func(*args, **kwargs)
-        model = func_self.model
-        self.attributes = self._Attributes(model, actor)
+        self._actor = self._func(*args, **kwargs)
+        self._model = func_self.model
+        self.attributes = self._Attributes(self._model, self._actor)
         return self
 
 

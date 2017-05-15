@@ -263,7 +263,7 @@ def test_plugin_workdir(ctx, thread_executor, tmpdir):
 
 
 @pytest.fixture(params=[
-    # (thread.ThreadExecutor, {}),
+    (thread.ThreadExecutor, {}),
     (process.ProcessExecutor, {'python_path': [tests.ROOT_DIR]}),
 ])
 def executor(request):
@@ -345,7 +345,7 @@ def test_relationship_operation_logging(ctx, executor):
 
 def test_attribute_consumption(ctx, executor, dataholder):
     # region Updating node operation
-    node_int_name, node_op_name = mock.operations.NODE_OPERATIONS_INSTALL[0]    # Standard.install
+    node_int_name, node_op_name = mock.operations.NODE_OPERATIONS_INSTALL[0]
 
     source_node = ctx.model.node.get_by_name(mock.models.DEPENDENT_NODE_NAME)
 
@@ -363,7 +363,7 @@ def test_attribute_consumption(ctx, executor, dataholder):
     # endregion
 
     # region updating relationship operation
-    rel_int_name, rel_op_name = mock.operations.RELATIONSHIP_OPERATIONS_INSTALL[2]  # Configure.add_source
+    rel_int_name, rel_op_name = mock.operations.RELATIONSHIP_OPERATIONS_INSTALL[2]
 
     relationship = ctx.model.relationship.list()[0]
     interface = mock.models.create_interface(
@@ -400,7 +400,9 @@ def test_attribute_consumption(ctx, executor, dataholder):
 
     assert len(source_node.attributes) == len(target_node.attributes) == 1
     assert source_node.attributes['key'] != target_node.attributes['key']
-    assert source_node.attributes['key'].value == target_node.attributes['key'].value == dataholder['key']
+    assert source_node.attributes['key'].value == \
+           target_node.attributes['key'].value == \
+           dataholder['key']
 
 
 def _assert_loggins(ctx, inputs):
@@ -437,10 +439,10 @@ def _assert_loggins(ctx, inputs):
 
 @operation
 def logged_operation(ctx, **_):
-    ctx.logger.info(ctx.task.inputs['op_start'])
+    ctx.logger.info(ctx.task.inputs['op_start'].value)
     # enables to check the relation between the created_at field properly
     time.sleep(1)
-    ctx.logger.debug(ctx.task.inputs['op_end'])
+    ctx.logger.debug(ctx.task.inputs['op_end'].value)
 
 
 @operation

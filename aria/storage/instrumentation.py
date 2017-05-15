@@ -148,12 +148,12 @@ class _Instrumentation(object):
         def listener(target, value, initiator):
             tracked_instances = self.tracked_changes.setdefault(target.__modelname__, {})
             tracked_attributes = tracked_instances.setdefault(target.id, {})
-            collection = tracked_attributes.setdefault(initiator.key, [])
+            collection_attr = tracked_attributes.setdefault(initiator.key, [])
             instance_as_dict = value.to_dict()
             instance_as_dict.update((k, getattr(value, k))
                                     for k in getattr(value, '__private_fields__', []))
             instance_as_dict['_MODEL_CLS'] = value.__modelname__
-            collection.append(instance_as_dict)
+            collection_attr.append(instance_as_dict)
 
         listener_args = (collection_attr, 'append', listener)
         sqlalchemy.event.listen(*listener_args)
@@ -254,20 +254,21 @@ def apply_tracked_changes(tracked_changes, new_instances, model):
     """
     successfully_updated_changes = dict()
     try:
+
+        # Handle new instances
+        for mapi_name, new_instance in new_instances.items():
+            successfully_updated_changes[mapi_name] = dict()
+            mapi = getattr(model, mapi_name)
+            for tmp_id, new_instance_kwargs in new_instance.items():
+                instance = mapi.model_cls(**new_instance_kwargs)
+                mapi.put(instance)
+                successfully_updated_changes[mapi_name][instance.id] = new_instance_kwargs
+                new_instance[tmp_id] = instance
+
         # handle instance updates
         for mapi_name, tracked_instances in tracked_changes.items():
             successfully_updated_changes[mapi_name] = dict()
             mapi = getattr(model, mapi_name)
-
-            # Handle new instances
-            for mapi_name, new_instance in new_instances.items():
-                successfully_updated_changes[mapi_name] = dict()
-                mapi = getattr(model, mapi_name)
-                for tmp_id, new_instance_kwargs in new_instance.items():
-                    instance = mapi.model_cls(**new_instance_kwargs)
-                    mapi.put(instance)
-                    successfully_updated_changes[mapi_name][instance.id] = new_instance_kwargs
-                    new_instance[tmp_id] = instance
 
             for instance_id, tracked_attributes in tracked_instances.items():
                 successfully_updated_changes[mapi_name][instance_id] = dict()
