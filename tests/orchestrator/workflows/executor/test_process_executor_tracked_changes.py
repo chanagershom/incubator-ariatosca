@@ -57,7 +57,7 @@ def _update_attributes(context):
 
 def test_refresh_state_of_tracked_attributes(context, executor):
     out = _run_workflow(context=context, executor=executor, op_func=_mock_refreshing_operation)
-    assert out['initial'] == out['after_refresh']
+    assert out['after_refresh'] == out['after_change']
     assert out['initial'] != out['after_change']
 
 
@@ -75,12 +75,11 @@ def test_apply_tracked_changes_during_an_operation(context, executor):
     expected_after_update.update(inputs['committed']) # pylint: disable=no-member
     expected_after_change = expected_after_update.copy()
     expected_after_change.update(inputs['changed_but_refreshed']) # pylint: disable=no-member
-    expected_after_refresh = expected_after_update
 
     assert out['initial'] == expected_initial
     assert out['after_update'] == expected_after_update
     assert out['after_change'] == expected_after_change
-    assert out['after_refresh'] == expected_after_refresh
+    assert out['after_refresh'] == expected_after_change
 
 
 def _run_workflow(context, executor, op_func, inputs=None):
