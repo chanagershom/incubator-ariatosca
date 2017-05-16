@@ -53,9 +53,9 @@ _FABRIC_ENV = {
 class TestWithActualSSHServer(object):
 
     def test_run_script_basic(self):
-        expected_runtime_property_value = 'some_value'
-        props = self._execute(env={'test_value': expected_runtime_property_value})
-        assert props['test_value'] == expected_runtime_property_value
+        expected_attribute_value = 'some_value'
+        props = self._execute(env={'test_value': expected_attribute_value})
+        assert props['test_value'] == expected_attribute_value
 
     @pytest.mark.skip(reason='sudo privileges are required')
     def test_run_script_as_sudo(self):
@@ -260,7 +260,7 @@ class TestWithActualSSHServer(object):
             tasks_graph=tasks_graph)
         eng.execute()
         return self._workflow_context.model.node.get_by_name(
-            mock.models.DEPENDENCY_NODE_NAME).runtime_properties
+            mock.models.DEPENDENCY_NODE_NAME).attributes
 
     def _execute_and_get_task_exception(self, *args, **kwargs):
         signal = events.on_failure_task_signal
