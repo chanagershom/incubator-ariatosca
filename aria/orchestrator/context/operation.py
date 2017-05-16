@@ -21,72 +21,10 @@ import threading
 
 import aria
 from aria.utils import file
-from .common import BaseContext
+from . import common
 
 
-class _DecorateAttributes(object):
-
-    class _Attributes(object):
-        def __init__(self, model, actor):
-            self._model = model
-            self._actor = actor
-            self._attributes = actor.attributes
-            self._attr_cls = self._model.parameter.model_cls
-
-        def __getitem__(self, item):
-            return self._attributes[item].value
-
-        def __setitem__(self, key, value):
-            if key in self._attributes:
-                self._attributes[key].value = value
-                self._model.parameter.update(self._attributes[key])
-            else:
-                attr = self._attr_cls.wrap(key, value)
-                self._attributes[key] = attr
-                self._model.parameter.put(attr)
-
-        def update(self, dict_=None, **kwargs):
-            if dict_:
-                for key, value in dict_.items():
-                    self[key] = value
-
-            for key, value in kwargs.items():
-                self[key] = value
-
-        def keys(self):
-            for attr in self._attributes.values():
-                yield attr.unwrap()[0]
-
-        def values(self):
-            for attr in self._attributes.values():
-                yield attr.unwrap()[1]
-
-        def items(self):
-            for attr in self._attributes.values():
-                yield attr.unwrap()
-
-        def __iter__(self):
-            for attr in self._attributes.values():
-                yield attr.unwrap()[0]
-
-    def __init__(self, func):
-        self._func = func
-
-    def __getattr__(self, item):
-        try:
-            return getattr(self._actor, item)
-        except AttributeError:
-            return super(_DecorateAttributes, self).__getattribute__(item)
-
-    def __call__(self, *args, **kwargs):
-        func_self = args[0]
-        self._actor = self._func(*args, **kwargs)
-        self._model = func_self.model
-        self.attributes = self._Attributes(self._model, self._actor)
-        return self
-
-
-class BaseOperationContext(BaseContext):
+class BaseOperationContext(common.BaseContext):
     """
     Context object used during operation creation and execution
     """
@@ -167,7 +105,7 @@ class NodeOperationContext(BaseOperationContext):
     """
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def node_template(self):
         """
         the node of the current operation
@@ -176,7 +114,7 @@ class NodeOperationContext(BaseOperationContext):
         return self.node.node_template
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def node(self):
         """
         The node instance of the current operation
@@ -191,7 +129,7 @@ class RelationshipOperationContext(BaseOperationContext):
     """
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def source_node_template(self):
         """
         The source node
@@ -200,7 +138,7 @@ class RelationshipOperationContext(BaseOperationContext):
         return self.source_node.node_template
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def source_node(self):
         """
         The source node instance
@@ -209,7 +147,7 @@ class RelationshipOperationContext(BaseOperationContext):
         return self.relationship.source_node
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def target_node_template(self):
         """
         The target node
@@ -218,7 +156,7 @@ class RelationshipOperationContext(BaseOperationContext):
         return self.target_node.node_template
 
     @property
-    @_DecorateAttributes
+    @common.DecorateAttributes
     def target_node(self):
         """
         The target node instance

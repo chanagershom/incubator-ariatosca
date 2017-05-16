@@ -104,7 +104,11 @@ class CtxProxy(object):
         try:
             typed_request = json.loads(request)
             args = typed_request['args']
-            payload = _process_ctx_request(self.ctx, args)
+            try:
+                payload = _process_ctx_request(self.ctx, args)
+            except BaseException:
+                self.ctx.model.log._session.close()
+                raise
             result_type = 'result'
             if isinstance(payload, exceptions.ScriptException):
                 payload = dict(message=str(payload))

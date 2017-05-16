@@ -34,7 +34,7 @@ _INSTRUMENTED = {
         _models.Task.status: str,
         _models.Node.attributes: collection,
         # TODO: add support for pickled type
-        # _models.Parameter._value: some_type
+        _models.Parameter._value: lambda x: x
     },
     'new': (_models.Log, ),
 
@@ -106,7 +106,6 @@ class _Instrumentation(object):
         for instrumented_attribute, attribute_type in instrumented.get('modified', {}).items():
             self._register_attribute_listener(instrumented_attribute=instrumented_attribute,
                                               attribute_type=attribute_type)
-            # TODO: Revisit this, why not?
             if not isinstance(attribute_type, _Collection):
                 instrumented_class = instrumented_attribute.parent.entity
                 instrumented_class_attributes = instrumented_attribute_classes.setdefault(
@@ -146,6 +145,7 @@ class _Instrumentation(object):
 
     def _register_append_to_attribute_listener(self, collection_attr):
         def listener(target, value, initiator):
+            import pydevd; pydevd.settrace('localhost', suspend=False)
             tracked_instances = self.tracked_changes.setdefault(target.__modelname__, {})
             tracked_attributes = tracked_instances.setdefault(target.id, {})
             collection_attr = tracked_attributes.setdefault(initiator.key, [])
@@ -161,13 +161,11 @@ class _Instrumentation(object):
 
     def _register_set_attribute_listener(self, instrumented_attribute, attribute_type):
         def listener(target, value, *_):
+            import pydevd; pydevd.settrace('localhost', suspend=False)
             mapi_name = target.__modelname__
             tracked_instances = self.tracked_changes.setdefault(mapi_name, {})
             tracked_attributes = tracked_instances.setdefault(target.id, {})
-            if value is None:
-                current = None
-            else:
-                current = copy.deepcopy(attribute_type(value))
+            current = copy.deepcopy(attribute_type(value)) if value else None
             tracked_attributes[instrumented_attribute.key] = _Value(_STUB, current)
             return current
         listener_args = (instrumented_attribute, 'set', listener)

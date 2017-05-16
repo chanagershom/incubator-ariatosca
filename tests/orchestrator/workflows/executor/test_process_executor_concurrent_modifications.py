@@ -31,6 +31,8 @@ from tests import mock
 from tests import storage
 
 
+# TODO: rethink this entire module
+
 def test_concurrent_modification_on_task_succeeded(context, executor, lock_files):
     _test(context, executor, lock_files, _test_task_succeeded, expected_failure=True)
 
@@ -62,8 +64,7 @@ def _test_update_and_refresh(ctx, lock_files, key, first_value, second_value):
     if not first:
         try:
             ctx.model.node.update(node)
-        except StorageError as e:
-            assert 'Version conflict' in str(e)
+        except StorageError:
             ctx.model.node.refresh(node)
         else:
             raise RuntimeError('Unexpected')
@@ -118,8 +119,8 @@ def _test(context, executor, lock_files, func, expected_failure):
         except ExecutorException:
             pass
 
-    props = _node(context).runtime_properties
-    assert props[key] == first_value
+    props = _node(context).attributes
+    assert props[key].value == first_value
 
     exceptions = [event['kwargs']['exception'] for event in collected.get(signal, [])]
     if expected_failure:
@@ -151,7 +152,6 @@ def lock_files(tmpdir):
 
 
 def _concurrent_update(lock_files, node, key, first_value, second_value):
-
     locker1 = fasteners.InterProcessLock(lock_files[0])
     locker2 = fasteners.InterProcessLock(lock_files[1])
 
@@ -165,7 +165,7 @@ def _concurrent_update(lock_files, node, key, first_value, second_value):
     else:
         locker2.acquire()
 
-    node.runtime_properties[key] = first_value if first else second_value
+    node.attributes[key] = first_value if first else second_value
 
     if first:
         locker1.release()

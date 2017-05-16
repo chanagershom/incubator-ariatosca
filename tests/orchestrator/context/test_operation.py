@@ -25,7 +25,9 @@ from aria import (
     operation,
 )
 from aria.orchestrator import context
+from aria.orchestrator.context import common
 from aria.orchestrator.workflows import api
+from aria.modeling.models import Parameter
 
 import tests
 from tests import (
@@ -263,7 +265,7 @@ def test_plugin_workdir(ctx, thread_executor, tmpdir):
 
 
 @pytest.fixture(params=[
-    (thread.ThreadExecutor, {}),
+    # (thread.ThreadExecutor, {}),
     (process.ProcessExecutor, {'python_path': [tests.ROOT_DIR]}),
 ])
 def executor(request):
@@ -495,4 +497,124 @@ def attribute_altering_operation(ctx, attributes_dict, **_):
 def attribute_consuming_operation(ctx, holder_path, **_):
     holder = helpers.FilesystemDataHolder(holder_path)
     ctx.target_node.attributes.update(ctx.source_node.attributes)
-    holder.update(ctx.source_node.attributes)
+    holder.update(**ctx.source_node.attributes)
+
+
+class MockActor(object):
+    def __init__(self):
+        self.attributes = {}
+
+
+class MockModel(object):
+
+    def __init__(self):
+        self.parameter = type('MockModel', (object, ), {'model_cls': Parameter,
+                                                        'put': lambda *args, **kwargs: None,
+                                                        'update': lambda *args, **kwargs: None})()
+
+
+class TestDict():
+
+    @pytest.fixture
+    def actor(self):
+        return MockActor()
+
+    @pytest.fixture
+    def model(self):
+        return MockModel()
+
+    def test_keys(self, model, actor):
+        dict_ = common._Dict(actor, model)
+        actor.attributes.update({
+            'key1': Parameter.wrap('key1', 'value1'),
+            'key2': Parameter.wrap('key1', 'value2')}
+        )
+        assert sorted(dict_.keys()) == sorted(['key1', 'key2'])
+
+    def test_values(self, model, actor):
+        dict_ = common._Dict(actor, model)
+        actor.attributes.update({
+            'key1': Parameter.wrap('key1', 'value1'),
+            'key2': Parameter.wrap('key1', 'value2')}
+        )
+        assert sorted(dict_.values()) == sorted(['value1', 'value2'])
+
+    def test_items(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        actor.attributes.update({
+            'key1': Parameter.wrap('key1', 'value1'),
+            'key2': Parameter.wrap('key1', 'value2')}
+        )
+        assert sorted(dict_.items()) == sorted([('key1', 'value1'), ('key2', 'value2')])
+
+    def test_iter(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        actor.attributes.update({
+            'key1': Parameter.wrap('key1', 'value1'),
+            'key2': Parameter.wrap('key1', 'value2')}
+        )
+        assert sorted(list(dict_)) == sorted(['key1', 'key2'])
+
+    def test_bool(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        assert not dict_
+        actor.attributes.update({
+            'key1': Parameter.wrap('key1', 'value1'),
+            'key2': Parameter.wrap('key1', 'value2')}
+        )
+        assert dict_
+
+    def test_set_item(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        dict_['key1'] = Parameter.wrap('key1', 'value1')
+        assert 'key1' in dict_
+        assert isinstance(dict_._attributes['key1'], Parameter)
+        assert dict_['key1'] == 'value1'
+
+        dict_['key1'] = {}
+        dict_['key1']['inner_key'] = 'value2'
+
+        assert isinstance(dict_._attributes['key1'], Parameter)
+        assert len(dict_) == 1
+        assert 'inner_key' in dict_['key1']
+        assert isinstance(dict_['key1'], common._Dict)
+        assert dict_['key1']['inner_key'] == 'value2'
+
+    def test_get_item(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        dict_['key1'] = Parameter.wrap('key1', 'value1')
+
+        assert isinstance(dict_._attributes['key1'], Parameter)
+
+    def test_update(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        dict_['key1'] = 'value1'
+
+        new_dict = {'key2': 'value2'}
+        dict_.update(new_dict)
+        assert len(dict_) == 2
+        assert dict_['key2'] == 'value2'
+        assert isinstance(dict_._attributes['key2'], Parameter)
+
+        new_dict = {}
+        new_dict.update(dict_)
+        assert new_dict['key1'] == dict_['key1']
+
+    def test_copy(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        dict_['key1'] = 'value1'
+
+        new_dict = dict_.copy()
+        assert new_dict is not dict_
+        assert new_dict == dict_
+
+        dict_['key1'] = 'value2'
+        assert new_dict['key1'] == 'value1'
+        assert dict_['key1'] == 'value2'
+
+    def test_clear(self, actor, model):
+        dict_ = common._Dict(actor, model)
+        dict_['key1'] = 'value1'
+        dict_.clear()
+
+        assert len(dict_) == 0
