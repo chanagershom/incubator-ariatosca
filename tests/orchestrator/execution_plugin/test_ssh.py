@@ -94,7 +94,7 @@ class TestWithActualSSHServer(object):
                 'base_dir': expected_base_dir
             })
         assert props['env_value'].value == expected_env_value
-        assert len(props['bash_version']) > 0
+        assert len(props['bash_version'].value) > 0
         assert props['arg1_value'].value == expected_arg1_value
         assert props['arg2_value'].value == expected_arg2_value
         assert props['cwd'].value == expected_cwd
