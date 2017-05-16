@@ -104,11 +104,7 @@ class CtxProxy(object):
         try:
             typed_request = json.loads(request)
             args = typed_request['args']
-            try:
-                payload = _process_ctx_request(self.ctx, args)
-            except BaseException:
-                self.ctx.model.log._session.close()
-                raise
+            payload = _process_ctx_request(self.ctx, args)
             result_type = 'result'
             if isinstance(payload, exceptions.ScriptException):
                 payload = dict(message=str(payload))
@@ -118,6 +114,7 @@ class CtxProxy(object):
                 'payload': payload
             }, cls=modeling.utils.ModelJSONEncoder)
         except Exception as e:
+            self.ctx.model.log._session.rollback()
             traceback_out = StringIO.StringIO()
             traceback.print_exc(file=traceback_out)
             payload = {
