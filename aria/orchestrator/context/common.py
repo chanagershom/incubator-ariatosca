@@ -333,6 +333,16 @@ class DecorateAttributes(dict):
     def __init__(self, func):
         super(DecorateAttributes, self).__init__()
         self._func = func
+        self._attributes = None
+        self._actor = None
+
+    @property
+    def attributes(self):
+        return self._attributes
+
+    @property
+    def actor(self):
+        return self._actor
 
     def __getattr__(self, item):
         try:
@@ -343,6 +353,5 @@ class DecorateAttributes(dict):
     def __call__(self, *args, **kwargs):
         func_self = args[0]
         self._actor = self._func(*args, **kwargs)
-        self._model = func_self.model
-        self.attributes = _Dict(self._actor, self._model)
+        self._attributes = _Dict(self._actor, func_self.model)
         return self

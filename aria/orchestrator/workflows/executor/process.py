@@ -49,7 +49,6 @@ from aria.utils import (
     exceptions,
     process as process_utils
 )
-from aria.modeling import types as modeling_types
 
 
 _INT_FMT = 'I'

@@ -513,7 +513,7 @@ class MockModel(object):
                                                         'update': lambda *args, **kwargs: None})()
 
 
-class TestDict():
+class TestDict(object):
 
     @pytest.fixture
     def actor(self):
@@ -525,9 +525,11 @@ class TestDict():
 
     def test_keys(self, model, actor):
         dict_ = common._Dict(actor, model)
-        actor.attributes.update({
-            'key1': Parameter.wrap('key1', 'value1'),
-            'key2': Parameter.wrap('key1', 'value2')}
+        actor.attributes.update(
+            {
+                'key1': Parameter.wrap('key1', 'value1'),
+                'key2': Parameter.wrap('key1', 'value2')
+            }
         )
         assert sorted(dict_.keys()) == sorted(['key1', 'key2'])
 
@@ -535,24 +537,24 @@ class TestDict():
         dict_ = common._Dict(actor, model)
         actor.attributes.update({
             'key1': Parameter.wrap('key1', 'value1'),
-            'key2': Parameter.wrap('key1', 'value2')}
-        )
+            'key2': Parameter.wrap('key1', 'value2')
+        })
         assert sorted(dict_.values()) == sorted(['value1', 'value2'])
 
     def test_items(self, actor, model):
         dict_ = common._Dict(actor, model)
         actor.attributes.update({
             'key1': Parameter.wrap('key1', 'value1'),
-            'key2': Parameter.wrap('key1', 'value2')}
-        )
+            'key2': Parameter.wrap('key1', 'value2')
+        })
         assert sorted(dict_.items()) == sorted([('key1', 'value1'), ('key2', 'value2')])
 
     def test_iter(self, actor, model):
         dict_ = common._Dict(actor, model)
         actor.attributes.update({
             'key1': Parameter.wrap('key1', 'value1'),
-            'key2': Parameter.wrap('key1', 'value2')}
-        )
+            'key2': Parameter.wrap('key1', 'value2')
+        })
         assert sorted(list(dict_)) == sorted(['key1', 'key2'])
 
     def test_bool(self, actor, model):
@@ -560,8 +562,8 @@ class TestDict():
         assert not dict_
         actor.attributes.update({
             'key1': Parameter.wrap('key1', 'value1'),
-            'key2': Parameter.wrap('key1', 'value2')}
-        )
+            'key2': Parameter.wrap('key1', 'value2')
+        })
         assert dict_
 
     def test_set_item(self, actor, model):
