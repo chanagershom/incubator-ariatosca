@@ -29,48 +29,37 @@ from tests.orchestrator.context import execute as execute_workflow
 from tests.orchestrator.workflows.helpers import events_collector
 from tests import mock
 from tests import storage
+from tests import helpers
 
 
-# TODO: rethink this entire module
-
-def test_concurrent_modification_on_task_succeeded(context, executor, lock_files):
-    _test(context, executor, lock_files, _test_task_succeeded, expected_failure=True)
-
-
-@operation
-def _test_task_succeeded(ctx, lock_files, key, first_value, second_value):
-    _concurrent_update(lock_files, ctx.node, key, first_value, second_value)
+@pytest.fixture
+def dataholder(tmpdir):
+    dataholder_path = str(tmpdir.join('dataholder'))
+    holder = helpers.FilesystemDataHolder(dataholder_path)
+    return holder
 
 
-def test_concurrent_modification_on_task_failed(context, executor, lock_files):
-    _test(context, executor, lock_files, _test_task_failed, expected_failure=True)
+def test_concurrent_modification_on_task_succeeded(context, executor, lock_files, dataholder):
+    _test(context, executor, lock_files, _test_task_succeeded, dataholder, expected_failure=False)
 
 
 @operation
-def _test_task_failed(ctx, lock_files, key, first_value, second_value):
-    first = _concurrent_update(lock_files, ctx.node, key, first_value, second_value)
+def _test_task_succeeded(ctx, lock_files, key, first_value, second_value, holder_path):
+    _concurrent_update(lock_files, ctx.node, key, first_value, second_value, holder_path)
+
+
+def test_concurrent_modification_on_task_failed(context, executor, lock_files, dataholder):
+    _test(context, executor, lock_files, _test_task_failed, dataholder, expected_failure=True)
+
+
+@operation
+def _test_task_failed(ctx, lock_files, key, first_value, second_value, holder_path):
+    first = _concurrent_update(lock_files, ctx.node, key, first_value, second_value, holder_path)
     if not first:
         raise RuntimeError('MESSAGE')
 
 
-def test_concurrent_modification_on_update_and_refresh(context, executor, lock_files):
-    _test(context, executor, lock_files, _test_update_and_refresh, expected_failure=False)
-
-
-@operation
-def _test_update_and_refresh(ctx, lock_files, key, first_value, second_value):
-    node = ctx.node
-    first = _concurrent_update(lock_files, node, key, first_value, second_value)
-    if not first:
-        try:
-            ctx.model.node.update(node)
-        except StorageError:
-            ctx.model.node.refresh(node)
-        else:
-            raise RuntimeError('Unexpected')
-
-
-def _test(context, executor, lock_files, func, expected_failure):
+def _test(context, executor, lock_files, func, dataholder, expected_failure):
     def _node(ctx):
         return ctx.model.node.get_by_name(mock.models.DEPENDENCY_NODE_NAME)
 
@@ -83,7 +72,8 @@ def _test(context, executor, lock_files, func, expected_failure):
         'lock_files': lock_files,
         'key': key,
         'first_value': first_value,
-        'second_value': second_value
+        'second_value': second_value,
+        'holder_path': dataholder.path
     }
 
     node = _node(context)
@@ -120,16 +110,12 @@ def _test(context, executor, lock_files, func, expected_failure):
             pass
 
     props = _node(context).attributes
-    assert props[key].value == first_value
+    assert dataholder['invocations'] == 2
+    assert props[key].value == dataholder[key]
 
     exceptions = [event['kwargs']['exception'] for event in collected.get(signal, [])]
     if expected_failure:
         assert exceptions
-        exception = exceptions[-1]
-        assert isinstance(exception, StorageError)
-        assert 'Version conflict' in str(exception)
-    else:
-        assert not exceptions
 
 
 @pytest.fixture
@@ -151,7 +137,8 @@ def lock_files(tmpdir):
     return str(tmpdir.join('first_lock_file')), str(tmpdir.join('second_lock_file'))
 
 
-def _concurrent_update(lock_files, node, key, first_value, second_value):
+def _concurrent_update(lock_files, node, key, first_value, second_value, holder_path):
+    holder = helpers.FilesystemDataHolder(holder_path)
     locker1 = fasteners.InterProcessLock(lock_files[0])
     locker2 = fasteners.InterProcessLock(lock_files[1])
 
@@ -161,11 +148,14 @@ def _concurrent_update(lock_files, node, key, first_value, second_value):
         # Give chance for both processes to acquire locks
         while locker2.acquire(blocking=False):
             locker2.release()
-            time.sleep(0.01)
+            time.sleep(0.1)
     else:
         locker2.acquire()
 
     node.attributes[key] = first_value if first else second_value
+    holder['key'] = first_value if first else second_value
+    holder.setdefault('invocations', 0)
+    holder['invocations'] += 1
 
     if first:
         locker1.release()

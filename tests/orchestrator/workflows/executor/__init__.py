@@ -74,3 +74,6 @@ class MockContext(object):
             return cls(storage=aria.application_model_storage(**kwargs))
         else:
             return cls()
+
+    def _teardown_db_resources(cls):
+        pass

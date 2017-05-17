@@ -47,6 +47,9 @@ class FilesystemDataHolder(object):
         with open(self._path, 'w') as f:
             return json.dump(value, f)
 
+    def __contains__(self, item):
+        return item in self._load()
+
     def __setitem__(self, key, value):
         dict_ = self._load()
         dict_[key] = value

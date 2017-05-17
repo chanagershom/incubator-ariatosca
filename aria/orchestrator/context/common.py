@@ -197,6 +197,9 @@ class BaseContext(object):
         resource_template = jinja2.Template(resource_content)
         return resource_template.render(variables)
 
+    def _teardown_db_resources(self):
+        self.model.log._session.close()
+        self.model.log._engine.dispose()
 
 class _Dict(collections.MutableMapping):
     def __init__(self, actor, model, nested=None):

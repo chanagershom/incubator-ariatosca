@@ -309,8 +309,7 @@ def _main():
         task_func(ctx=ctx, **operation_inputs)
         messenger.succeeded()
     except BaseException as e:
-        ctx.model.log._session.close()
-        ctx.model.log._engine.dispose()
+        ctx._teardown_db_resources()
         messenger.failed(e)
 
 if __name__ == '__main__':
