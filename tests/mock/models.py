@@ -230,7 +230,7 @@ def create_interface(service, interface_name, operation_name, operation_kwargs=N
 
     if operation_kwargs and operation_kwargs.get('inputs'):
         operation_kwargs['inputs'] = dict(
-            (input_name, models.Parameter.wrap(input_name, input_value))
+            (input_name, models.Input.wrap(input_name, input_value))
             for input_name, input_value in operation_kwargs['inputs'].iteritems()
             if input_value is not None)
 

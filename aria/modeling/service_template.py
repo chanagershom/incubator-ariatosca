@@ -67,7 +67,7 @@ class ServiceTemplateBase(TemplateModelMixin):
     :ivar substitution_template: The entire service can appear as a node
     :vartype substitution_template: :class:`SubstitutionTemplate`
     :ivar inputs: Externally provided parameters
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar outputs: These parameters are filled in after service installation
     :vartype outputs: {basestring: :class:`Output`}
     :ivar workflow_templates: Custom workflows that can be performed on the service
@@ -245,7 +245,7 @@ class ServiceTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     @declared_attr
     def outputs(cls):
@@ -1617,8 +1617,8 @@ class InterfaceTemplateBase(TemplateModelMixin):
     :vartype type: :class:`Type`
     :ivar description: Human-readable description
     :vartype description: basestring
-    :ivar inputs: Parameters that can be used by all operations in the interface
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar inputs: Inputs that can be used by all operations in the interface
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar operation_templates: Operations
     :vartype operation_templates: {basestring: :class:`OperationTemplate`}
     :ivar node_template: Containing node template
@@ -1708,7 +1708,7 @@ class InterfaceTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -1775,8 +1775,8 @@ class OperationTemplateBase(TemplateModelMixin):
     :vartype configuration: {basestring, object}
     :ivar dependencies: Dependency strings (interpreted by the plugin)
     :vartype dependencies: [basestring]
-    :ivar inputs: Parameters that can be used by this operation
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar inputs: Inputs that can be used by this operation
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar executor: Name of executor to run the operation with
     :vartype executor: basestring
     :ivar max_attempts: Maximum number of attempts allowed in case of failure
@@ -1854,7 +1854,7 @@ class OperationTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 

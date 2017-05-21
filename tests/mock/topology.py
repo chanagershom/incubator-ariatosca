@@ -28,8 +28,8 @@ def create_simple_topology_single_node(model_storage, create_operation):
         'Standard', 'create',
         operation_kwargs=dict(
             implementation=create_operation,
-            inputs={'key': aria_models.Parameter.wrap('key', 'create'),
-                    'value': aria_models.Parameter.wrap('value', True)})
+            inputs={'key': aria_models.Input.wrap('key', 'create'),
+                    'value': aria_models.Input.wrap('value', True)})
     )
     node_template.interface_templates[interface_template.name] = interface_template                 # pylint: disable=unsubscriptable-object
 
@@ -39,8 +39,8 @@ def create_simple_topology_single_node(model_storage, create_operation):
         'Standard', 'create',
         operation_kwargs=dict(
             implementation=create_operation,
-            inputs={'key': aria_models.Parameter.wrap('key', 'create'),
-                    'value': aria_models.Parameter.wrap('value', True)})
+            inputs={'key': aria_models.Input.wrap('key', 'create'),
+                    'value': aria_models.Input.wrap('value', True)})
     )
     node.interfaces[interface.name] = interface                                                     # pylint: disable=unsubscriptable-object
 

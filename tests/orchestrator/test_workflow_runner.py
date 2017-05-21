@@ -171,7 +171,7 @@ def test_execution_inputs_override_workflow_inputs(request):
     wf_inputs = {'input1': 'value1', 'input2': 'value2', 'input3': 5}
     mock_workflow = _setup_mock_workflow_in_service(
         request,
-        inputs=dict((name, models.Parameter.wrap(name, val)) for name, val
+        inputs=dict((name, models.Input.wrap(name, val)) for name, val
                     in wf_inputs.iteritems()))
 
     with mock.patch('aria.orchestrator.workflow_runner.Engine'):
@@ -196,7 +196,7 @@ def test_execution_inputs_undeclared_inputs(request):
 
 def test_execution_inputs_missing_required_inputs(request):
     mock_workflow = _setup_mock_workflow_in_service(
-        request, inputs={'required_input': models.Parameter.wrap('required_input', value=None)})
+        request, inputs={'required_input': models.Input.wrap('required_input', value=None)})
 
     with pytest.raises(modeling_exceptions.MissingRequiredInputsException):
         _create_workflow_runner(request, mock_workflow, inputs={})
@@ -204,7 +204,7 @@ def test_execution_inputs_missing_required_inputs(request):
 
 def test_execution_inputs_wrong_type_inputs(request):
     mock_workflow = _setup_mock_workflow_in_service(
-        request, inputs={'input': models.Parameter.wrap('input', 'value')})
+        request, inputs={'input': models.Input.wrap('input', 'value')})
 
     with pytest.raises(modeling_exceptions.InputsOfWrongTypeException):
         _create_workflow_runner(request, mock_workflow, inputs={'input': 5})
@@ -225,7 +225,7 @@ def test_workflow_function_parameters(request, tmpdir):
     wf_inputs = {'output_path': output_path, 'input1': 'value1', 'input2': 'value2', 'input3': 5}
 
     mock_workflow = _setup_mock_workflow_in_service(
-        request, inputs=dict((name, models.Parameter.wrap(name, val)) for name, val
+        request, inputs=dict((name, models.Input.wrap(name, val)) for name, val
                              in wf_inputs.iteritems()))
 
     _create_workflow_runner(request, mock_workflow,

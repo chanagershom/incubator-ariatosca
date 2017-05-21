@@ -115,7 +115,7 @@ class ExecutionBase(ModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # region foreign keys
 
@@ -230,8 +230,8 @@ class TaskBase(ModelMixin):
     :vartype relationship: :class:`Relationship`
     :ivar plugin: The implementing plugin (set to None for default execution plugin)
     :vartype plugin: :class:`Plugin`
-    :ivar inputs: Parameters that can be used by this task
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar inputs: Inputs that can be used by this task
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar implementation: Python path to an ``@operation`` function
     :vartype implementation: basestring
     :ivar max_attempts: Maximum number of retries allowed in case of failure
@@ -301,7 +301,7 @@ class TaskBase(ModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     implementation = Column(String)
     max_attempts = Column(Integer, default=1)

@@ -32,7 +32,7 @@ from aria.modeling.models import (Type, ServiceTemplate, NodeTemplate,
                                   RequirementTemplate, RelationshipTemplate, CapabilityTemplate,
                                   GroupTemplate, PolicyTemplate, SubstitutionTemplate,
                                   SubstitutionTemplateMapping, InterfaceTemplate, OperationTemplate,
-                                  ArtifactTemplate, Metadata, Parameter, Output,
+                                  ArtifactTemplate, Metadata, Parameter, Input, Output,
                                   PluginSpecification)
 
 from .constraints import (Equal, GreaterThan, GreaterOrEqual, LessThan, LessOrEqual, InRange,
@@ -90,7 +90,8 @@ def create_service_template_model(context): # pylint: disable=too-many-locals,to
     topology_template = context.presentation.get('service_template', 'topology_template')
     if topology_template is not None:
         create_parameter_models_from_values(model.inputs,
-                                            topology_template._get_input_values(context))
+                                            topology_template._get_input_values(context),
+                                            model_class=Input)
         create_parameter_models_from_values(model.outputs,
                                             topology_template._get_output_values(context),
                                             model_class=Output)
@@ -354,10 +355,10 @@ def create_interface_template_model(context, service_template, interface):
     inputs = interface.inputs
     if inputs:
         for input_name, the_input in inputs.iteritems():
-            model.inputs[input_name] = Parameter(name=input_name, # pylint: disable=unexpected-keyword-arg
-                                                 type_name=the_input.value.type,
-                                                 value=the_input.value.value,
-                                                 description=the_input.value.description)
+            model.inputs[input_name] = Input(name=input_name, # pylint: disable=unexpected-keyword-arg
+                                             type_name=the_input.value.type,
+                                             value=the_input.value.value,
+                                             description=the_input.value.description)
 
     operations = interface.operations
     if operations:
@@ -401,10 +402,10 @@ def create_operation_template_model(context, service_template, operation):
     inputs = operation.inputs
     if inputs:
         for input_name, the_input in inputs.iteritems():
-            model.inputs[input_name] = Parameter(name=input_name, # pylint: disable=unexpected-keyword-arg
-                                                 type_name=the_input.value.type,
-                                                 value=the_input.value.value,
-                                                 description=the_input.value.description)
+            model.inputs[input_name] = Input(name=input_name, # pylint: disable=unexpected-keyword-arg
+                                             type_name=the_input.value.type,
+                                             value=the_input.value.value,
+                                             description=the_input.value.description)
 
     return model
 
@@ -497,10 +498,10 @@ def create_workflow_operation_template_model(context, service_template, policy):
         elif prop_name == 'dependencies':
             model.dependencies = prop.value
         else:
-            model.inputs[prop_name] = Parameter(name=prop_name, # pylint: disable=unexpected-keyword-arg
-                                                type_name=prop.type,
-                                                value=prop.value,
-                                                description=prop.description)
+            model.inputs[prop_name] = Input(name=prop_name, # pylint: disable=unexpected-keyword-arg
+                                            type_name=prop.type,
+                                            value=prop.value,
+                                            description=prop.description)
 
     return model
 

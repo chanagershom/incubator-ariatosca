@@ -63,7 +63,7 @@ class ServiceBase(InstanceModelMixin):
     :ivar substitution: The entire service can appear as a node
     :vartype substitution: :class:`Substitution`
     :ivar inputs: Externally provided parameters
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar outputs: These parameters are filled in after service installation
     :vartype outputs: {basestring: :class:`Output`}
     :ivar workflows: Custom workflows that can be performed on the service
@@ -167,7 +167,7 @@ class ServiceBase(InstanceModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     @declared_attr
     def outputs(cls):
@@ -1490,8 +1490,8 @@ class InterfaceBase(InstanceModelMixin):
     :vartype type: :class:`Type`
     :ivar description: Human-readable description
     :vartype description: string
-    :ivar inputs: Parameters that can be used by all operations in the interface
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar inputs: Inputs that can be used by all operations in the interface
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar operations: Operations
     :vartype operations: {basestring: :class:`Operation`}
     :ivar node: Containing node
@@ -1583,7 +1583,7 @@ class InterfaceBase(InstanceModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -1645,8 +1645,8 @@ class OperationBase(InstanceModelMixin):
     :vartype configuration: {basestring, object}
     :ivar dependencies: Dependency strings (interpreted by the plugin)
     :vartype dependencies: [basestring]
-    :ivar inputs: Parameters that can be used by this operation
-    :vartype inputs: {basestring: :class:`Parameter`}
+    :ivar inputs: Inputs that can be used by this operation
+    :vartype inputs: {basestring: :class:`Input`}
     :ivar executor: Name of executor to run the operation with
     :vartype executor: basestring
     :ivar max_attempts: Maximum number of attempts allowed in case of failure
@@ -1726,7 +1726,7 @@ class OperationBase(InstanceModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='inputs', dict_key='name')
+        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -1755,7 +1755,7 @@ class OperationBase(InstanceModelMixin):
         # Note: the arguments will *override* operation inputs of the same name
         if arguments:
             for k, v in arguments.iteritems():
-                self.inputs[k] = models.Parameter.wrap(k, v)
+                self.inputs[k] = models.Input.wrap(k, v)
 
     @property
     def as_raw(self):

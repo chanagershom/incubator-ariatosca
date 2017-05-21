@@ -54,20 +54,20 @@ class NodeTemplateContainerHolder(object):
 def create_inputs(inputs, template_inputs):
     """
     :param inputs: key-value dict
-    :param template_inputs: parameter name to parameter object dict
-    :return: dict of parameter name to Parameter models
+    :param template_inputs: input name to input object dict
+    :return: dict of input name to Input models
     """
     merged_inputs = _merge_and_validate_inputs(inputs, template_inputs)
 
     from . import models
     input_models = []
     for input_name, input_val in merged_inputs.iteritems():
-        parameter = models.Parameter( # pylint: disable=unexpected-keyword-arg
+        input = models.Input( # pylint: disable=unexpected-keyword-arg
             name=input_name,
             type_name=template_inputs[input_name].type_name,
             description=template_inputs[input_name].description,
             value=input_val)
-        input_models.append(parameter)
+        input_models.append(input)
 
     return dict((inp.name, inp) for inp in input_models)
 
