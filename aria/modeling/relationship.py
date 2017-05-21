@@ -287,8 +287,8 @@ def many_to_many(model_class,
 
     if prefix is not None:
         secondary_table_name = '{0}_{1}'.format(prefix, secondary_table_name)
-        if other_property is None:
-            other_property = '{0}_{1}'.format(prefix, formatting.pluralize(this_table))
+    if other_property is None:
+        other_property = '{0}_{1}'.format(prefix, formatting.pluralize(this_table))
 
     secondary_table = _get_secondary_table(
         model_class.metadata,

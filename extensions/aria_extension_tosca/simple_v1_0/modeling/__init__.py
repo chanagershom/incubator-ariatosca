@@ -32,7 +32,8 @@ from aria.modeling.models import (Type, ServiceTemplate, NodeTemplate,
                                   RequirementTemplate, RelationshipTemplate, CapabilityTemplate,
                                   GroupTemplate, PolicyTemplate, SubstitutionTemplate,
                                   SubstitutionTemplateMapping, InterfaceTemplate, OperationTemplate,
-                                  ArtifactTemplate, Metadata, Parameter, PluginSpecification)
+                                  ArtifactTemplate, Metadata, Parameter, Output,
+                                  PluginSpecification)
 
 from .constraints import (Equal, GreaterThan, GreaterOrEqual, LessThan, LessOrEqual, InRange,
                           ValidValues, Length, MinLength, MaxLength, Pattern)
@@ -91,7 +92,8 @@ def create_service_template_model(context): # pylint: disable=too-many-locals,to
         create_parameter_models_from_values(model.inputs,
                                             topology_template._get_input_values(context))
         create_parameter_models_from_values(model.outputs,
-                                            topology_template._get_output_values(context))
+                                            topology_template._get_output_values(context),
+                                            model_class=Output)
 
     # Plugin specifications
     policies = context.presentation.get('service_template', 'topology_template', 'policies')
@@ -537,13 +539,17 @@ def create_types(context, root, types):
                         container.children.append(model)
 
 
-def create_parameter_models_from_values(properties, source_properties):
+def create_parameter_models_from_values(properties, source_properties, model_class=None):
+
+    if model_class is None:
+        model_class = Parameter
+
     if source_properties:
         for property_name, prop in source_properties.iteritems():
-            properties[property_name] = Parameter(name=property_name, # pylint: disable=unexpected-keyword-arg
-                                                  type_name=prop.type,
-                                                  value=prop.value,
-                                                  description=prop.description)
+            properties[property_name] = model_class(name=property_name, # pylint: disable=unexpected-keyword-arg
+                                                    type_name=prop.type,
+                                                    value=prop.value,
+                                                    description=prop.description)
 
 
 def create_parameter_models_from_assignments(properties, source_properties):

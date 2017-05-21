@@ -30,3 +30,8 @@ topology_template:
           configure: scripts/configure.sh
           start: scripts/start.sh
           stop: scripts/stop.sh
+
+  outputs:
+    test_output:
+      description: description_of_test_output
+      value: value_of_test_output

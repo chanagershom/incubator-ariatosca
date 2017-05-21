@@ -65,7 +65,7 @@ class ServiceBase(InstanceModelMixin):
     :ivar inputs: Externally provided parameters
     :vartype inputs: {basestring: :class:`Parameter`}
     :ivar outputs: These parameters are filled in after service installation
-    :vartype outputs: {basestring: :class:`Parameter`}
+    :vartype outputs: {basestring: :class:`Output`}
     :ivar workflows: Custom workflows that can be performed on the service
     :vartype workflows: {basestring: :class:`Operation`}
     :ivar plugins: Plugins used by the service
@@ -171,7 +171,7 @@ class ServiceBase(InstanceModelMixin):
 
     @declared_attr
     def outputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='outputs', dict_key='name')
+        return relationship.many_to_many(cls, 'output', dict_key='name')
 
     @declared_attr
     def plugins(cls):

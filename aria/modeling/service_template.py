@@ -69,7 +69,7 @@ class ServiceTemplateBase(TemplateModelMixin):
     :ivar inputs: Externally provided parameters
     :vartype inputs: {basestring: :class:`Parameter`}
     :ivar outputs: These parameters are filled in after service installation
-    :vartype outputs: {basestring: :class:`Parameter`}
+    :vartype outputs: {basestring: :class:`Output`}
     :ivar workflow_templates: Custom workflows that can be performed on the service
     :vartype workflow_templates: {basestring: :class:`OperationTemplate`}
     :ivar plugin_specifications: Plugins used by the service
@@ -249,7 +249,7 @@ class ServiceTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def outputs(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='outputs', dict_key='name')
+        return relationship.many_to_many(cls, 'output', dict_key='name')
 
     # endregion
 

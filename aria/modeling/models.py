@@ -73,6 +73,7 @@ __all__ = (
 
     # Common service models
     'Parameter',
+    'Output'
     'Type',
     'Metadata',
 
@@ -210,6 +211,13 @@ class Parameter(aria_declarative_base, service_common.ParameterBase):
     pass
 
 
+class Output(aria_declarative_base, service_common.OutputBase):
+    # Temporarily, until we will separate the Parameter model into Input, Output, Property and
+    # Attribute, Parameter will represent Input, Property and Attribute, and Output will represent
+    # the outputs.
+    pass
+
+
 class Type(aria_declarative_base, service_common.TypeBase):
     pass
 
@@ -277,6 +285,7 @@ models_to_register = [
 
     # Common service models
     Parameter,
+    Output,
     Type,
     Metadata,
 
