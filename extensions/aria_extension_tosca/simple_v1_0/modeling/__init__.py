@@ -32,7 +32,7 @@ from aria.modeling.models import (Type, ServiceTemplate, NodeTemplate,
                                   RequirementTemplate, RelationshipTemplate, CapabilityTemplate,
                                   GroupTemplate, PolicyTemplate, SubstitutionTemplate,
                                   SubstitutionTemplateMapping, InterfaceTemplate, OperationTemplate,
-                                  ArtifactTemplate, Metadata, Parameter, Input, Output,
+                                  ArtifactTemplate, Metadata, Parameter, Input, Output, Property,
                                   PluginSpecification)
 
 from .constraints import (Equal, GreaterThan, GreaterOrEqual, LessThan, LessOrEqual, InRange,
@@ -170,7 +170,8 @@ def create_node_template_model(context, service_template, node_template):
         model.description = node_template.description.value
 
     create_parameter_models_from_values(model.properties,
-                                        node_template._get_property_values(context))
+                                        node_template._get_property_values(context),
+                                        model_class=Property)
     create_parameter_models_from_values(model.attributes,
                                         node_template._get_attribute_default_values(context))
     create_interface_template_models(context, service_template, model.interface_templates,
@@ -217,7 +218,8 @@ def create_group_template_model(context, service_template, group):
     if group.description:
         model.description = group.description.value
 
-    create_parameter_models_from_values(model.properties, group._get_property_values(context))
+    create_parameter_models_from_values(model.properties, group._get_property_values(context),
+                                        model_class=Property)
     create_interface_template_models(context, service_template, model.interface_templates,
                                      group._get_interfaces(context))
 
@@ -240,7 +242,8 @@ def create_policy_template_model(context, service_template, policy):
     if policy.description:
         model.description = policy.description.value
 
-    create_parameter_models_from_values(model.properties, policy._get_property_values(context))
+    create_parameter_models_from_values(model.properties, policy._get_property_values(context),
+                                        Property)
 
     node_templates, groups = policy._get_targets(context)
     if node_templates:
@@ -431,7 +434,8 @@ def create_artifact_template_model(context, service_template, artifact):
             for k, v in credential.iteritems():
                 model.repository_credential[k] = v
 
-    create_parameter_models_from_values(model.properties, artifact._get_property_values(context))
+    create_parameter_models_from_values(model.properties, artifact._get_property_values(context),
+                                        model_class=Property)
 
     return model
 
@@ -556,10 +560,10 @@ def create_parameter_models_from_values(properties, source_properties, model_cla
 def create_parameter_models_from_assignments(properties, source_properties):
     if source_properties:
         for property_name, prop in source_properties.iteritems():
-            properties[property_name] = Parameter(name=property_name, # pylint: disable=unexpected-keyword-arg
-                                                  type_name=prop.value.type,
-                                                  value=prop.value.value,
-                                                  description=prop.value.description)
+            properties[property_name] = Property(name=property_name, # pylint: disable=unexpected-keyword-arg
+                                                 type_name=prop.value.type,
+                                                 value=prop.value.value,
+                                                 description=prop.value.description)
 
 
 def create_interface_template_models(context, service_template, interfaces, source_interfaces):

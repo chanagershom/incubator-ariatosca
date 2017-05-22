@@ -413,7 +413,7 @@ class NodeTemplateBase(TemplateModelMixin):
     :ivar max_instances: Maximum number nodes that will appear in the service
     :vartype max_instances: int
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interface_templates: Bundles of operations
     :vartype interface_templates: {basestring: :class:`InterfaceTemplate`}
     :ivar artifact_templates: Associated files
@@ -513,7 +513,7 @@ class NodeTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def attributes(cls):
@@ -630,7 +630,7 @@ class GroupTemplateBase(TemplateModelMixin):
     :ivar node_templates: All nodes instantiated by these templates will be members of the group
     :vartype node_templates: [:class:`NodeTemplate`]
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interface_templates: Bundles of operations
     :vartype interface_templates: {basestring: :class:`InterfaceTemplate`}
     :ivar service_template: Containing service template
@@ -700,7 +700,7 @@ class GroupTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -766,7 +766,7 @@ class PolicyTemplateBase(TemplateModelMixin):
     :ivar group_templates: Policy will be enacted on all nodes in these groups
     :vartype group_templates: [:class:`GroupTemplate`]
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar service_template: Containing service template
     :vartype service_template: :class:`ServiceTemplate`
     :ivar policies: Instantiated policies
@@ -831,7 +831,7 @@ class PolicyTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1344,7 +1344,7 @@ class RelationshipTemplateBase(TemplateModelMixin):
     :ivar description: Human-readable description
     :vartype description: basestring
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interface_templates: Bundles of operations
     :vartype interface_templates: {basestring: :class:`InterfaceTemplate`}
     :ivar requirement_template: Containing requirement template
@@ -1398,7 +1398,7 @@ class RelationshipTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1463,7 +1463,7 @@ class CapabilityTemplateBase(TemplateModelMixin):
     :ivar max_occurrences: Maximum number of requirement matches allowed
     :vartype min_occurrences: int
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar node_template: Containing node template
     :vartype node_template: :class:`NodeTemplate`
     :ivar substitution_template_mapping: Our contribution to service substitution
@@ -1528,7 +1528,7 @@ class CapabilityTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1966,7 +1966,7 @@ class ArtifactTemplateBase(TemplateModelMixin):
     :ivar repository_credential: Credentials for accessing the repository
     :vartype repository_credential: {basestring: basestring}
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar node_template: Containing node template
     :vartype node_template: :class:`NodeTemplate`
     :ivar artifacts: Instantiated artifacts
@@ -2024,7 +2024,7 @@ class ArtifactTemplateBase(TemplateModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', prefix='properties', dict_key='name')
 
     # endregion
 

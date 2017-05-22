@@ -94,7 +94,7 @@ def create_service_with_dependencies(include_execution=False,
         service.executions = [execution]
         execution.id = '1'
     if include_input:
-        input = create_parameter(name='input1', value='value1')
+        input = create_parameter(name='input1', value='value1', model_class=models.Input)
         service.inputs = {'input1': input}
     if include_node:
         node_template = create_node_template(service_template=service_template)
@@ -110,7 +110,8 @@ def create_node_template_with_dependencies(include_node=False, include_property=
         service = create_service(service_template=service_template)
         create_node(dependency_node_template=node_template, service=service)
     if include_property:
-        node_template.properties = {'prop1': create_parameter(name='prop1', value='value1')}
+        node_template.properties = {'prop1': create_parameter(name='prop1', value='value1',
+                                                              model_class=models.Property)}
     return node_template
 
 
@@ -281,9 +282,13 @@ def create_plugin_specification(name='test_plugin', version='0.1'):
     )
 
 
-def create_parameter(name, value):
-    p = models.Parameter()
+def create_parameter(name, value, model_class=models.Parameter):
+    p = model_class()
     return p.wrap(name, value)
+
+
+def create_input(name, value):
+    return create_parameter(name, value, model_class=models.Input)
 
 
 def _dictify(item):

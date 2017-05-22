@@ -320,7 +320,7 @@ class NodeBase(InstanceModelMixin):
     :ivar description: Human-readable description
     :vartype description: string
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interfaces: Bundles of operations
     :vartype interfaces: {basestring: :class:`Interface`}
     :ivar artifacts: Associated files
@@ -511,7 +511,7 @@ class NodeBase(InstanceModelMixin):
     # region many_to_many relationships
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def attributes(cls):
@@ -712,7 +712,7 @@ class GroupBase(InstanceModelMixin):
     :ivar nodes: Members of this group
     :vartype nodes: [:class:`Node`]
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interfaces: Bundles of operations
     :vartype interfaces: {basestring: :class:`Interface`}
     :ivar service: Containing service
@@ -784,7 +784,7 @@ class GroupBase(InstanceModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -840,7 +840,7 @@ class PolicyBase(InstanceModelMixin):
     :ivar groups: Policy will be enacted on all nodes in these groups
     :vartype groups: [:class:`Group`]
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar service: Containing service
     :vartype service: :class:`Service`
     """
@@ -900,7 +900,7 @@ class PolicyBase(InstanceModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def nodes(cls):
@@ -1168,7 +1168,7 @@ class RelationshipBase(InstanceModelMixin):
     :ivar target_capability: Capability at the target node (optional)
     :vartype target_capability: :class:`Capability`
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar interfaces: Bundles of operations
     :vartype interfaces: {basestring: :class:`Interfaces`}
     :ivar source_position: The position of the relationship in the outbound relationships.
@@ -1292,7 +1292,7 @@ class RelationshipBase(InstanceModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1362,7 +1362,7 @@ class CapabilityBase(InstanceModelMixin):
     :ivar occurrences: Actual number of requirement matches
     :vartype occurrences: int
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar node: Containing node
     :vartype node: :class:`Node`
     :ivar relationship: Available when we are the target of a relationship
@@ -1428,7 +1428,7 @@ class CapabilityBase(InstanceModelMixin):
 
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1830,7 +1830,7 @@ class ArtifactBase(InstanceModelMixin):
     :ivar repository_credential: Credentials for accessing the repository
     :vartype repository_credential: {basestring: basestring}
     :ivar properties: Associated parameters
-    :vartype properties: {basestring: :class:`Parameter`}
+    :vartype properties: {basestring: :class:`Property`}
     :ivar node: Containing node
     :vartype node: :class:`Node`
     """
@@ -1889,7 +1889,7 @@ class ArtifactBase(InstanceModelMixin):
     # region many_to_many relationships
     @declared_attr
     def properties(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='properties', dict_key='name')
+        return relationship.many_to_many(cls, 'property', dict_key='name')
     # endregion
 
     description = Column(Text)

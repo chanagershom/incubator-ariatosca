@@ -36,7 +36,7 @@ from aria.modeling.models import (
     Relationship,
     NodeTemplate,
     Node,
-    Input,
+    Property,
     Type
 )
 
@@ -625,7 +625,7 @@ class TestNodeHostAddress(object):
             service_template=storage.service_template.list()[0]
         )
         if host_address:
-            kwargs['properties'] = {'host_address': Input.wrap('host_address', host_address)}
+            kwargs['properties'] = {'host_address': Property.wrap('host_address', host_address)}
         node = NodeTemplate(**kwargs)
         storage.node_template.put(node)
         return node
