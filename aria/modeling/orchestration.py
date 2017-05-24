@@ -115,7 +115,7 @@ class ExecutionBase(ModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
+        return relationship.one_to_many(cls, 'input', dict_key='name')
 
     # region foreign keys
 
@@ -301,7 +301,7 @@ class TaskBase(ModelMixin):
 
     @declared_attr
     def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
+        return relationship.one_to_many(cls, 'input', dict_key='name')
 
     implementation = Column(String)
     max_attempts = Column(Integer, default=1)

@@ -125,6 +125,10 @@ class ServiceBase(InstanceModelMixin):
         return relationship.one_to_many(cls, 'output', dict_key='name')
 
     @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
+
+    @declared_attr
     def updates(cls):
         return relationship.one_to_many(cls, 'service_update')
 
@@ -168,10 +172,6 @@ class ServiceBase(InstanceModelMixin):
     def meta_data(cls):
         # Warning! We cannot use the attr name "metadata" because it's used by SQLAlchemy!
         return relationship.many_to_many(cls, 'metadata', dict_key='name')
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     @declared_attr
     def plugins(cls):
@@ -509,6 +509,7 @@ class NodeBase(InstanceModelMixin):
     # endregion
 
     # region many_to_many relationships
+
     @declared_attr
     def properties(cls):
         return relationship.many_to_many(cls, 'property', dict_key='name')
@@ -1012,10 +1013,6 @@ class SubstitutionBase(InstanceModelMixin):
 
     # endregion
 
-    # region many_to_many relationships
-
-    # endregion
-
     @property
     def as_raw(self):
         return collections.OrderedDict((
@@ -1117,10 +1114,6 @@ class SubstitutionMappingBase(InstanceModelMixin):
     # endregion
 
     # region many_to_one relationships
-
-    # endregion
-
-    # region many_to_many relationships
 
     # endregion
 
@@ -1550,6 +1543,10 @@ class InterfaceBase(InstanceModelMixin):
     # region one_to_many relationships
 
     @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
+
+    @declared_attr
     def operations(cls):
         return relationship.one_to_many(cls, 'operation', dict_key='name')
 
@@ -1576,14 +1573,6 @@ class InterfaceBase(InstanceModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -1704,6 +1693,10 @@ class OperationBase(InstanceModelMixin):
 
     # region one_to_many relationships
 
+    @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1719,14 +1712,6 @@ class OperationBase(InstanceModelMixin):
     @declared_attr
     def operation_template(cls):
         return relationship.many_to_one(cls, 'operation_template')
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 

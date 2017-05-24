@@ -594,6 +594,86 @@ class InputBase(TemplateModelMixin, caching.HasCachedMethods):
     def value(self, value):
         self._value = value
 
+    # region foreign keys
+
+    @declared_attr
+    def service_template_fk(cls):
+        """For Input many-to-one to ServiceTemplate"""
+        return relationship.foreign_key('service_template', nullable=True)
+
+    @declared_attr
+    def service_fk(cls):
+        """For Input many-to-one to Service"""
+        return relationship.foreign_key('service', nullable=True)
+
+    @declared_attr
+    def interface_fk(cls):
+        """For Input many-to-one to Interface"""
+        return relationship.foreign_key('interface', nullable=True)
+
+    @declared_attr
+    def operation_fk(cls):
+        """For Input many-to-one to Operation"""
+        return relationship.foreign_key('operation', nullable=True)
+
+    @declared_attr
+    def interface_template_fk(cls):
+        """For Input many-to-one to InterfaceTemplate"""
+        return relationship.foreign_key('interface_template', nullable=True)
+
+    @declared_attr
+    def operation_template_fk(cls):
+        """For Input many-to-one to OperationTemplate"""
+        return relationship.foreign_key('operation_template', nullable=True)
+
+    @declared_attr
+    def execution_fk(cls):
+        """For Input many-to-one to Execution"""
+        return relationship.foreign_key('execution', nullable=True)
+
+    @declared_attr
+    def task_fk(cls):
+        """For Input many-to-one to Task"""
+        return relationship.foreign_key('task', nullable=True)
+
+    # endregion
+
+    # region many_to_one relationships
+
+    @declared_attr
+    def service_template(cls):
+        return relationship.many_to_one(cls, 'service_template')
+
+    @declared_attr
+    def service(cls):
+        return relationship.many_to_one(cls, 'service')
+
+    @declared_attr
+    def interface(cls):
+        return relationship.many_to_one(cls, 'interface')
+
+    @declared_attr
+    def operation(cls):
+        return relationship.many_to_one(cls, 'operation')
+
+    @declared_attr
+    def interface_template(cls):
+        return relationship.many_to_one(cls, 'interface_template')
+
+    @declared_attr
+    def operation_template(cls):
+        return relationship.many_to_one(cls, 'operation_template')
+
+    @declared_attr
+    def execution(cls):
+        return relationship.many_to_one(cls, 'execution')
+
+    @declared_attr
+    def task(cls):
+        return relationship.many_to_one(cls, 'task')
+
+    # endregion
+
     @property
     @caching.cachedmethod
     def owner(self):
@@ -608,7 +688,7 @@ class InputBase(TemplateModelMixin, caching.HasCachedMethods):
         for the_relationship in self.__mapper__.relationships:
             v = getattr(self, the_relationship.key)
             if v:
-                return v[0] # because we are many-to-many, the back reference will be a list
+                return v # because we are many-to-many, the back reference will be a list
 
         raise ValueError('orphaned input: does not have an owner: {0}'.format(self.name))
 
@@ -662,36 +742,36 @@ class InputBase(TemplateModelMixin, caching.HasCachedMethods):
 
         raise ValueError('orphaned input: does not have a container: {0}'.format(self.name))
 
-    @property
-    @caching.cachedmethod
-    def service(self):
-        """
-        The :class:`Service` containing this parameter, or None if not contained in a service.
-        """
-
-        from . import models
-        container = self.container
-        if isinstance(container, models.Service):
-            return container
-        elif hasattr(container, 'service'):
-            return container.service
-        return None
-
-    @property
-    @caching.cachedmethod
-    def service_template(self):
-        """
-        The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
-        service template.
-        """
-
-        from . import models
-        container = self.container
-        if isinstance(container, models.ServiceTemplate):
-            return container
-        elif hasattr(container, 'service_template'):
-            return container.service_template
-        return None
+    # @property
+    # @caching.cachedmethod
+    # def service(self):
+    #     """
+    #     The :class:`Service` containing this parameter, or None if not contained in a service.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.Service):
+    #         return container
+    #     elif hasattr(container, 'service'):
+    #         return container.service
+    #     return None
+    #
+    # @property
+    # @caching.cachedmethod
+    # def service_template(self):
+    #     """
+    #     The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
+    #     service template.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.ServiceTemplate):
+    #         return container
+    #     elif hasattr(container, 'service_template'):
+    #         return container.service_template
+    #     return None
 
     @property
     def as_raw(self):
@@ -859,36 +939,36 @@ class PropertyBase(TemplateModelMixin, caching.HasCachedMethods):
 
         raise ValueError('orphaned property: does not have a container: {0}'.format(self.name))
 
-    @property
-    @caching.cachedmethod
-    def service(self):
-        """
-        The :class:`Service` containing this parameter, or None if not contained in a service.
-        """
-
-        from . import models
-        container = self.container
-        if isinstance(container, models.Service):
-            return container
-        elif hasattr(container, 'service'):
-            return container.service
-        return None
-
-    @property
-    @caching.cachedmethod
-    def service_template(self):
-        """
-        The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
-        service template.
-        """
-
-        from . import models
-        container = self.container
-        if isinstance(container, models.ServiceTemplate):
-            return container
-        elif hasattr(container, 'service_template'):
-            return container.service_template
-        return None
+    # @property
+    # @caching.cachedmethod
+    # def service(self):
+    #     """
+    #     The :class:`Service` containing this parameter, or None if not contained in a service.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.Service):
+    #         return container
+    #     elif hasattr(container, 'service'):
+    #         return container.service
+    #     return None
+    #
+    # @property
+    # @caching.cachedmethod
+    # def service_template(self):
+    #     """
+    #     The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
+    #     service template.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.ServiceTemplate):
+    #         return container
+    #     elif hasattr(container, 'service_template'):
+    #         return container.service_template
+    #     return None
 
     @property
     def as_raw(self):

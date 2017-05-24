@@ -219,6 +219,10 @@ class ServiceTemplateBase(TemplateModelMixin):
         return relationship.one_to_many(cls, 'output', dict_key='name')
 
     @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
+
+    @declared_attr
     def group_templates(cls):
         return relationship.one_to_many(cls, 'group_template', dict_key='name')
 
@@ -246,10 +250,6 @@ class ServiceTemplateBase(TemplateModelMixin):
     def meta_data(cls):
         # Warning! We cannot use the attr name "metadata" because it's used by SQLAlchemy!
         return relationship.many_to_many(cls, 'metadata', dict_key='name')
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -937,10 +937,6 @@ class SubstitutionTemplateBase(TemplateModelMixin):
 
     # endregion
 
-    # region many_to_many relationships
-
-    # endregion
-
     @property
     def as_raw(self):
         return collections.OrderedDict((
@@ -1049,10 +1045,6 @@ class SubstitutionTemplateMappingBase(TemplateModelMixin):
     @declared_attr
     def substitution_template(cls):
         return relationship.many_to_one(cls, 'substitution_template', back_populates='mappings')
-
-    # endregion
-
-    # region many_to_many relationships
 
     # endregion
 
@@ -1217,10 +1209,6 @@ class RequirementTemplateBase(TemplateModelMixin):
     def target_node_type(cls):
         return relationship.many_to_one(
             cls, 'type', fk='target_node_type_fk', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
 
     # endregion
 
@@ -1638,7 +1626,6 @@ class InterfaceTemplateBase(TemplateModelMixin):
                           'group_template_fk',
                           'relationship_template_fk']
 
-
     # region foreign keys
 
     @declared_attr
@@ -1663,7 +1650,6 @@ class InterfaceTemplateBase(TemplateModelMixin):
 
     # endregion
 
-
     # region association proxies
 
     # endregion
@@ -1673,6 +1659,10 @@ class InterfaceTemplateBase(TemplateModelMixin):
     # endregion
 
     # region one_to_many relationships
+
+    @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
 
     @declared_attr
     def interfaces(cls):
@@ -1701,14 +1691,6 @@ class InterfaceTemplateBase(TemplateModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
@@ -1832,6 +1814,10 @@ class OperationTemplateBase(TemplateModelMixin):
     # region one_to_many relationships
 
     @declared_attr
+    def inputs(cls):
+        return relationship.one_to_many(cls, 'input', dict_key='name')
+
+    @declared_attr
     def operations(cls):
         return relationship.one_to_many(cls, 'operation')
 
@@ -1847,14 +1833,6 @@ class OperationTemplateBase(TemplateModelMixin):
     @declared_attr
     def interface_template(cls):
         return relationship.many_to_one(cls, 'interface_template')
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def inputs(cls):
-        return relationship.many_to_many(cls, 'input', dict_key='name')
 
     # endregion
 
