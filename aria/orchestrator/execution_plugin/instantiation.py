@@ -43,7 +43,7 @@ def configure_operation(operation):
     # kwargs in either "run_script_locally" or "run_script_with_ssh"
     for key, value in operation.configuration.iteritems():
         if key not in ('process', 'ssh'):
-            operation.arguments[key] = value.instantiate()
+            operation.arguments[key] = value.instantiate(None)
 
 
 def _configure_common(operation):

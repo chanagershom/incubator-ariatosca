@@ -199,7 +199,7 @@ if __name__ == '__main__':
         props = self._run(
             executor, workflow_context,
             script_path=script_path,
-            inputs={'key': 'value'})
+            arguments={'key': 'value'})
         assert props['key'] == 'value'
 
     @pytest.mark.parametrize(
@@ -458,10 +458,10 @@ if __name__ == '__main__':
              script_path,
              process=None,
              env_var='value',
-             inputs=None):
+             arguments=None):
         local_script_path = script_path
         script_path = os.path.basename(local_script_path) if local_script_path else ''
-        arguments = inputs or {}
+        arguments = arguments or {}
         process = process or {}
         if script_path:
             workflow_context.resource.service.upload(
@@ -493,7 +493,7 @@ if __name__ == '__main__':
                 node,
                 interface_name='test',
                 operation_name='op',
-                inputs=arguments))
+                arguments=arguments))
             return graph
         tasks_graph = mock_workflow(ctx=workflow_context)  # pylint: disable=no-value-for-parameter
         eng = engine.Engine(

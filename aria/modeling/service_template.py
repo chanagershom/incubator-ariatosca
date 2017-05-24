@@ -287,7 +287,7 @@ class ServiceTemplateBase(TemplateModelMixin):
                                  service_template=self)
         context.modeling.instance = service
 
-        service.inputs = utils.create_parameters(inputs or {}, self.inputs)
+        service.inputs = utils.merge_parameter_values(inputs, self.inputs)
         # TODO: now that we have inputs, we should scan properties and inputs and evaluate functions
 
         for plugin_specification in self.plugin_specifications.itervalues():

@@ -103,9 +103,9 @@ class TestOperationTask(object):
         assert storage_task.actor == core_task.context.node
         assert core_task.model_task == storage_task
         assert core_task.name == api_task.name
-        assert core_task.implementation == api_task.implementation
+        assert core_task.function == api_task.function
         assert core_task.actor == api_task.actor == node
-        assert core_task.inputs == api_task.inputs == storage_task.inputs
+        assert core_task.arguments == api_task.arguments == storage_task.arguments
         assert core_task.plugin == storage_plugin
 
     def test_relationship_operation_task_creation(self, ctx):

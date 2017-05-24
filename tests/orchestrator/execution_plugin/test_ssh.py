@@ -243,13 +243,13 @@ class TestWithActualSSHServer(object):
 
             ops = []
             for test_operation in test_operations:
-                op_inputs = arguments.copy()
-                op_inputs['test_operation'] = test_operation
+                op_arguments = arguments.copy()
+                op_arguments['test_operation'] = test_operation
                 ops.append(api.task.OperationTask(
                     node,
                     interface_name='test',
                     operation_name='op',
-                    inputs=op_inputs))
+                    arguments=op_arguments))
 
             graph.sequence(*ops)
             return graph

@@ -105,8 +105,8 @@ def stylize_log(item, mark_pattern):
     # implementation
     if item.task:
         # operation task
-        implementation = item.task.implementation
-        inputs = dict(i.unwrap() for i in item.task.inputs.values())
+        implementation = item.task.function
+        inputs = dict(arg.unwrap() for arg in item.task.arguments.values())
     else:
         # execution task
         implementation = item.execution.workflow_name

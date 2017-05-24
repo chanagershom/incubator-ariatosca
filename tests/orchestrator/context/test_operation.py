@@ -97,7 +97,7 @@ def test_node_operation_task_execution(ctx, thread_executor, dataholder):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 
@@ -115,8 +115,8 @@ def test_node_operation_task_execution(ctx, thread_executor, dataholder):
     )
     operations = interface.operations
     assert len(operations) == 1
-    assert dataholder['implementation'] == operations.values()[0].function             # pylint: disable=no-member
-    assert dataholder['inputs']['putput'] is True
+    assert dataholder['function'] == operations.values()[0].function             # pylint: disable=no-member
+    assert dataholder['arguments']['putput'] is True
 
     # Context based attributes (sugaring)
     assert dataholder['template_name'] == node.node_template.name
@@ -147,7 +147,7 @@ def test_relationship_operation_task_execution(ctx, thread_executor, dataholder)
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 
@@ -159,8 +159,8 @@ def test_relationship_operation_task_execution(ctx, thread_executor, dataholder)
     assert dataholder['actor_name'] == relationship.name
     assert interface_name in dataholder['task_name']
     operations = interface.operations
-    assert dataholder['implementation'] == operations.values()[0].function           # pylint: disable=no-member
-    assert dataholder['inputs']['putput'] is True
+    assert dataholder['function'] == operations.values()[0].function           # pylint: disable=no-member
+    assert dataholder['arguments']['putput'] is True
 
     # Context based attributes (sugaring)
     dependency_node_template = ctx.model.node_template.get_by_name(
@@ -252,7 +252,7 @@ def test_plugin_workdir(ctx, thread_executor, tmpdir):
             node,
             interface_name=interface_name,
             operation_name=operation_name,
-            inputs=arguments))
+            arguments=arguments))
 
     execute(workflow_func=basic_workflow, workflow_context=ctx, executor=thread_executor)
     expected_file = tmpdir.join('workdir', 'plugins', str(ctx.service.id),
@@ -301,7 +301,7 @@ def test_node_operation_logging(ctx, executor):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 
@@ -334,7 +334,7 @@ def test_relationship_operation_logging(ctx, executor):
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 
@@ -342,7 +342,7 @@ def test_relationship_operation_logging(ctx, executor):
     _assert_loggins(ctx, arguments)
 
 
-def _assert_loggins(ctx, inputs):
+def _assert_loggins(ctx, arguments):
 
     # The logs should contain the following: Workflow Start, Operation Start, custom operation
     # log string (op_start), custom operation log string (op_end), Operation End, Workflow End.
@@ -363,11 +363,11 @@ def _assert_loggins(ctx, inputs):
     assert all(l.execution == execution for l in logs)
     assert all(l in logs and l.task == task for l in task.logs)
 
-    op_start_log = [l for l in logs if inputs['op_start'] in l.msg and l.level.lower() == 'info']
+    op_start_log = [l for l in logs if arguments['op_start'] in l.msg and l.level.lower() == 'info']
     assert len(op_start_log) == 1
     op_start_log = op_start_log[0]
 
-    op_end_log = [l for l in logs if inputs['op_end'] in l.msg and l.level.lower() == 'debug']
+    op_end_log = [l for l in logs if arguments['op_end'] in l.msg and l.level.lower() == 'debug']
     assert len(op_end_log) == 1
     op_end_log = op_end_log[0]
 
@@ -376,10 +376,10 @@ def _assert_loggins(ctx, inputs):
 
 @operation
 def logged_operation(ctx, **_):
-    ctx.logger.info(ctx.task.inputs['op_start'])
+    ctx.logger.info(ctx.task.arguments['op_start'])
     # enables to check the relation between the created_at field properly
     time.sleep(1)
-    ctx.logger.debug(ctx.task.inputs['op_end'])
+    ctx.logger.debug(ctx.task.arguments['op_end'])
 
 
 @operation
@@ -408,8 +408,8 @@ def operation_common(ctx, holder):
 
     holder['actor_name'] = ctx.task.actor.name
     holder['task_name'] = ctx.task.name
-    holder['implementation'] = ctx.task.implementation
-    holder['inputs'] = dict(i.unwrap() for i in ctx.task.inputs.values())
+    holder['function'] = ctx.task.function
+    holder['arguments'] = dict(i.unwrap() for i in ctx.task.arguments.values())
 
 
 @operation

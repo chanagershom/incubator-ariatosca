@@ -66,7 +66,7 @@ class TestOperationTask(object):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments,
+                arguments=arguments,
                 max_attempts=max_attempts,
                 retry_interval=retry_interval,
                 ignore_failure=ignore_failure)
@@ -77,9 +77,9 @@ class TestOperationTask(object):
             interface=interface_name,
             operation=operation_name
         )
-        assert api_task.implementation == 'op_path'
+        assert api_task.function == 'op_path'
         assert api_task.actor == node
-        assert api_task.inputs['test_input'].value is True
+        assert api_task.arguments['test_input'].value is True
         assert api_task.retry_interval == retry_interval
         assert api_task.max_attempts == max_attempts
         assert api_task.ignore_failure == ignore_failure
@@ -113,7 +113,7 @@ class TestOperationTask(object):
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments,
+                arguments=arguments,
                 max_attempts=max_attempts,
                 retry_interval=retry_interval)
 
@@ -123,9 +123,9 @@ class TestOperationTask(object):
             interface=interface_name,
             operation=operation_name
         )
-        assert api_task.implementation == 'op_path'
+        assert api_task.function == 'op_path'
         assert api_task.actor == relationship
-        assert api_task.inputs['test_input'].value is True
+        assert api_task.arguments['test_input'].value is True
         assert api_task.retry_interval == retry_interval
         assert api_task.max_attempts == max_attempts
         assert api_task.plugin.name == 'test_plugin'
@@ -158,7 +158,7 @@ class TestOperationTask(object):
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments,
+                arguments=arguments,
                 max_attempts=max_attempts,
                 retry_interval=retry_interval)
 
@@ -168,9 +168,9 @@ class TestOperationTask(object):
             interface=interface_name,
             operation=operation_name
         )
-        assert api_task.implementation == 'op_path'
+        assert api_task.function == 'op_path'
         assert api_task.actor == relationship
-        assert api_task.inputs['test_input'].value is True
+        assert api_task.arguments['test_input'].value is True
         assert api_task.retry_interval == retry_interval
         assert api_task.max_attempts == max_attempts
         assert api_task.plugin.name == 'test_plugin'
@@ -198,7 +198,7 @@ class TestOperationTask(object):
                 interface_name=interface_name,
                 operation_name=operation_name)
 
-        assert task.inputs == {}
+        assert task.arguments == {}
         assert task.retry_interval == ctx._task_retry_interval
         assert task.max_attempts == ctx._task_max_attempts
         assert task.ignore_failure == ctx._task_ignore_failure

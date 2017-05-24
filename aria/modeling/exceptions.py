@@ -57,3 +57,9 @@ class UndeclaredParametersException(ParameterException):
     """
     ARIA modeling exception: Undeclared parameters have been provided.
     """
+
+
+class ForbiddenParameterNamesException(ParameterException):
+    """
+    ARIA modeling exception: Forbidden parameter names have been used.
+    """

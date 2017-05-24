@@ -104,7 +104,7 @@ def test_host_ip(workflow_context, executor, dataholder):
                 dependency_node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 
@@ -135,7 +135,7 @@ def test_relationship_tool_belt(workflow_context, executor, dataholder):
                 relationship,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments
+                arguments=arguments
             )
         )
 

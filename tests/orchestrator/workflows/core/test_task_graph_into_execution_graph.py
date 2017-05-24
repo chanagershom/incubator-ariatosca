@@ -108,9 +108,9 @@ def test_task_graph_into_execution_graph(tmpdir):
 def _assert_execution_is_api_task(execution_task, api_task):
     assert execution_task.id == api_task.id
     assert execution_task.name == api_task.name
-    assert execution_task.implementation == api_task.implementation
+    assert execution_task.function == api_task.function
     assert execution_task.actor == api_task.actor
-    assert execution_task.inputs == api_task.inputs
+    assert execution_task.arguments == api_task.arguments
 
 
 def _get_task_by_name(task_name, graph):

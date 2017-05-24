@@ -512,10 +512,8 @@ def create_workflow_operation_template_model(context, service_template, policy):
 
     properties = policy._get_property_values(context)
     for prop_name, prop in properties.iteritems():
-        if prop_name == 'function':
+        if prop_name == 'implementation':
             model.function = prop.value
-        elif prop_name == 'dependencies':
-            model.dependencies = prop.value
         else:
             model.configuration[prop_name] = Parameter(name=prop_name, # pylint: disable=unexpected-keyword-arg
                                                        type_name=prop.type,

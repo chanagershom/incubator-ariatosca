@@ -52,84 +52,95 @@ class NodeTemplateContainerHolder(object):
         return self.container.service_template
 
 
-def create_parameters(parameters, declared_parameters):
+def merge_parameter_values(parameter_values, declared_parameters, forbidden_names=None):
     """
-    Validates, merges, and wraps parameter values according to those declared by a type.
+    Merges parameter values according to those declared by a type.
 
-    Exceptions will be raised for validation errors:
+    Exceptions will be raised for validation errors.
 
-    * :class:`aria.modeling.exceptions.UndeclaredParametersException` if a key in ``parameters``
-      does not exist in ``declared_parameters``
-    * :class:`aria.modeling.exceptions.MissingRequiredParametersException` if a key in
-      ``declared_parameters`` does not exist in ``parameters`` and also has no default value
-    * :class:`aria.modeling.exceptions.ParametersOfWrongTypeException` if a value in ``parameters``
-      does not match its type in ``declared_parameters``
-
-    :param parameters: Provided parameter values
-    :type parameters: {basestring, object}
-    :param declared_parameters: Declared parameters
+    :param parameter_values: provided parameter values or None
+    :type parameter_values: {basestring, object}
+    :param declared_parameters: declared parameters
     :type declared_parameters: {basestring, :class:`aria.modeling.models.Parameter`}
-    :return: The merged parameters
+    :param forbidden_names: parameters will be validated against these names
+    :type forbidden_names: [basestring]
+    :return: the merged parameters
     :rtype: {basestring, :class:`aria.modeling.models.Parameter`}
+    :raises aria.modeling.exceptions.UndeclaredParametersException: if a key in ``parameter_values``
+            does not exist in ``declared_parameters``
+    :raises aria.modeling.exceptions.MissingRequiredParametersException: if a key in
+            ``declared_parameters`` does not exist in ``parameter_values`` and also has no default
+            value
+    :raises aria.modeling.exceptions.ForbiddenParameterNamesException: if a parameter name is in
+            ``forbidden_names``
+    :raises aria.modeling.exceptions.ParametersOfWrongTypeException: if a value in
+            ``parameter_values`` does not match its type in ``declared_parameters``
     """
-
-    merged_parameters = _merge_and_validate_parameters(parameters, declared_parameters)
 
     from . import models
-    parameters_models = OrderedDict()
-    for parameter_name, parameter_value in merged_parameters.iteritems():
-        parameter = models.Parameter( # pylint: disable=unexpected-keyword-arg
-            name=parameter_name,
-            type_name=declared_parameters[parameter_name].type_name,
-            description=declared_parameters[parameter_name].description,
-            value=parameter_value)
-        parameters_models[parameter.name] = parameter
 
-    return parameters_models
+    parameter_values = parameter_values or {}
 
+    undeclared_names = list(set(parameter_values.keys()).difference(declared_parameters.keys()))
+    if undeclared_names:
+        raise exceptions.UndeclaredParametersException(
+            'Undeclared parameters have been provided: {0}; Declared: {1}'
+            .format(_comma_separated_quoted(undeclared_names),
+                    _comma_separated_quoted(declared_parameters.keys())))
 
-def _merge_and_validate_parameters(parameters, declared_parameters):
-    merged_parameters = OrderedDict(parameters)
+    parameters = OrderedDict()
 
-    missing_parameters = []
-    wrong_type_parameters = OrderedDict()
-    for parameter_name, declared_parameter in declared_parameters.iteritems():
-        if parameter_name not in parameters:
-            if declared_parameter.value is not None:
-                merged_parameters[parameter_name] = declared_parameter.value  # apply default value
-            else:
-                missing_parameters.append(parameter_name)
-        else:
-            # Validate parameter type
+    missing_names = []
+    wrong_type_values = OrderedDict()
+    for declared_parameter_name, declared_parameter in declared_parameters.iteritems():
+        if declared_parameter_name in parameter_values:
+            # Value has been provided
+            value = parameter_values[declared_parameter_name]
+
+            # Validate type
+            type_name = declared_parameter.type_name
             try:
-                validate_value_type(parameters[parameter_name], declared_parameter.type_name)
+                validate_value_type(value, type_name)
             except ValueError:
-                wrong_type_parameters[parameter_name] = declared_parameter.type_name
+                wrong_type_values[declared_parameter_name] = type_name
             except RuntimeError:
                 # TODO: This error shouldn't be raised (or caught), but right now we lack support
                 # for custom data_types, which will raise this error. Skipping their validation.
                 pass
 
-    if missing_parameters:
-        raise exceptions.MissingRequiredParametersException(
-            'Required parameters {0} have not been specified; Expected parameters: {1}'
-            .format(missing_parameters, declared_parameters.keys()))
+            # Wrap in Parameter model
+            parameters[declared_parameter_name] = models.Parameter( # pylint: disable=unexpected-keyword-arg
+                name=declared_parameter_name,
+                type_name=type_name,
+                description=declared_parameter.description,
+                value=value)
+        elif declared_parameter.value is not None:
+            # Copy default value from declaration
+            parameters[declared_parameter_name] = declared_parameter.instantiate(None)
+        else:
+            # Required value has not been provided
+            missing_names.append(declared_parameter_name)
 
-    if wrong_type_parameters:
+    if missing_names:
+        raise exceptions.MissingRequiredParametersException(
+            'Declared parameters {0} have not been provided values'
+            .format(_comma_separated_quoted(missing_names)))
+
+    if forbidden_names:
+        used_forbidden_names = list(set(forbidden_names).intersection(parameters.keys()))
+        if used_forbidden_names:
+            raise exceptions.ForbiddenParameterNamesException(
+                'Forbidden parameter names have been used: {0}'
+                .format(_comma_separated_quoted(used_forbidden_names)))
+
+    if wrong_type_values:
         error_message = StringIO()
-        for param_name, param_type in wrong_type_parameters.iteritems():
-            error_message.write('Parameter "{0}" must be of type {1}{2}'
+        for param_name, param_type in wrong_type_values.iteritems():
+            error_message.write('Parameter "{0}" is not of declared type "{1}"{2}'
                                 .format(param_name, param_type, os.linesep))
         raise exceptions.ParametersOfWrongTypeException(error_message.getvalue())
 
-    undeclared_parameters = [parameter_name for parameter_name in parameters.keys()
-                             if parameter_name not in declared_parameters]
-    if undeclared_parameters:
-        raise exceptions.UndeclaredParametersException(
-            'Undeclared parameters have been specified: {0}; Expected parameters: {1}'
-            .format(undeclared_parameters, declared_parameters.keys()))
-
-    return merged_parameters
+    return parameters
 
 
 def coerce_dict_values(the_dict, report_issues=False):
@@ -200,6 +211,10 @@ def dump_interfaces(interfaces, name='Interfaces'):
     with context.style.indent:
         for interface in interfaces.itervalues():
             interface.dump()
+
+
+def _comma_separated_quoted(names):
+    return ', '.join('"{0}"'.format(name) for name in names)
 
 
 class classproperty(object):                                                                        # pylint: disable=invalid-name

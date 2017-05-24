@@ -103,12 +103,12 @@ def _test(context, executor, lock_files, func, expected_failure):
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments),
+                arguments=arguments),
             api.task.OperationTask(
                 node,
                 interface_name=interface_name,
                 operation_name=operation_name,
-                inputs=arguments)
+                arguments=arguments)
         )
 
     signal = events.on_failure_task_signal
