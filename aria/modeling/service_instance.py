@@ -336,7 +336,7 @@ class NodeBase(InstanceModelMixin):
     :ivar runtime_properties: TODO: should be replaced with attributes
     :vartype runtime_properties: {}
     :ivar state: The state of the node, according to to the TOSCA-defined node states
-    :vartype state: string
+    :vartype stateg: string
     :ivar version: Used by `aria.storage.instrumentation`
     :vartype version: int
     :ivar service: Containing service
@@ -467,6 +467,10 @@ class NodeBase(InstanceModelMixin):
         return relationship.one_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
+    def attributes(cls):
+        return relationship.one_to_many(cls, 'attribute', dict_key='name')
+
+    @declared_attr
     def artifacts(cls):
         return relationship.one_to_many(cls, 'artifact', dict_key='name')
 
@@ -509,14 +513,6 @@ class NodeBase(InstanceModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def attributes(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='attributes', dict_key='name')
 
     # endregion
 

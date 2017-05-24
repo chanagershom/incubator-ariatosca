@@ -76,6 +76,7 @@ __all__ = (
     'Input',
     'Output',
     'Property',
+    'Attribute',
     'Type',
     'Metadata',
 
@@ -214,20 +215,18 @@ class Parameter(aria_declarative_base, service_common.ParameterBase):
 
 
 class Input(aria_declarative_base, service_common.InputBase):
-    # Temporarily, until we will separate the Parameter model into Input, Output, Property and
-    # Attribute, Parameter will represent only Attribute.
     pass
 
 
 class Output(aria_declarative_base, service_common.OutputBase):
-    # Temporarily, until we will separate the Parameter model into Input, Output, Property and
-    # Attribute, Parameter will represent only Attribute.
     pass
 
 
 class Property(aria_declarative_base, service_common.PropertyBase):
-    # Temporarily, until we will separate the Parameter model into Input, Output, Property and
-    # Attribute, Parameter will represent only Attribute.
+    pass
+
+
+class Attribute(aria_declarative_base, service_common.AttributeBase):
     pass
 
 
@@ -301,6 +300,7 @@ models_to_register = [
     Input,
     Output,
     Property,
+    Attribute,
     Type,
     Metadata,
 

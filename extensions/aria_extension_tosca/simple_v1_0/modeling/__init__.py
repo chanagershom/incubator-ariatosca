@@ -33,7 +33,7 @@ from aria.modeling.models import (Type, ServiceTemplate, NodeTemplate,
                                   GroupTemplate, PolicyTemplate, SubstitutionTemplate,
                                   SubstitutionTemplateMapping, InterfaceTemplate, OperationTemplate,
                                   ArtifactTemplate, Metadata, Parameter, Input, Output, Property,
-                                  PluginSpecification)
+                                  Attribute, PluginSpecification)
 
 from .constraints import (Equal, GreaterThan, GreaterOrEqual, LessThan, LessOrEqual, InRange,
                           ValidValues, Length, MinLength, MaxLength, Pattern)
@@ -173,7 +173,8 @@ def create_node_template_model(context, service_template, node_template):
                                         node_template._get_property_values(context),
                                         model_class=Property)
     create_parameter_models_from_values(model.attributes,
-                                        node_template._get_attribute_default_values(context))
+                                        node_template._get_attribute_default_values(context),
+                                        model_class=Attribute)
     create_interface_template_models(context, service_template, model.interface_templates,
                                      node_template._get_interfaces(context))
 
@@ -243,7 +244,7 @@ def create_policy_template_model(context, service_template, policy):
         model.description = policy.description.value
 
     create_parameter_models_from_values(model.properties, policy._get_property_values(context),
-                                        Property)
+                                        model_class=Property)
 
     node_templates, groups = policy._get_targets(context)
     if node_templates:
@@ -545,9 +546,6 @@ def create_types(context, root, types):
 
 
 def create_parameter_models_from_values(properties, source_properties, model_class=None):
-
-    if model_class is None:
-        model_class = Parameter
 
     if source_properties:
         for property_name, prop in source_properties.iteritems():

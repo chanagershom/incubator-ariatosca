@@ -499,6 +499,10 @@ class NodeTemplateBase(TemplateModelMixin):
     def properties(cls):
         return relationship.one_to_many(cls, 'property', dict_key='name')
 
+    @declared_attr
+    def attributes(cls):
+        return relationship.one_to_many(cls, 'attribute', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -510,14 +514,6 @@ class NodeTemplateBase(TemplateModelMixin):
     @declared_attr
     def service_template(cls):
         return relationship.many_to_one(cls, 'service_template')
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def attributes(cls):
-        return relationship.many_to_many(cls, 'parameter', prefix='attributes', dict_key='name')
 
     # endregion
 
