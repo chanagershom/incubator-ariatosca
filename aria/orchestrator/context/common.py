@@ -27,6 +27,7 @@ from aria import (
     modeling
 )
 from aria.storage import exceptions
+from aria.modeling import models
 
 from ...utils.uuid import generate_uuid
 
@@ -195,25 +196,19 @@ class BaseContext(object):
         resource_template = jinja2.Template(resource_content)
         return resource_template.render(variables)
 
-    def _teardown_db_resources(self):
-        self.model.log._session.close()
-        self.model.log._engine.dispose()
-
 
 class _InstrumentedCollection(object):
 
     def __init__(self,
                  model,
                  parent,
-                 field_name=None,
-                 item_cls=None,
+                 field_name,
                  seq=None,
                  is_top_level=True,
                  **kwargs):
         self._model = model
         self._parent = parent
         self._field_name = field_name
-        self._item_cls = item_cls
         self._is_top_level = is_top_level
         self._load(seq, **kwargs)
 
@@ -259,29 +254,31 @@ class _InstrumentedCollection(object):
         else:
             return value
 
-        return instrumentation_cls(self._model, self, key, self._item_cls, value, False)
+        return instrumentation_cls(self._model, self, key, value, False)
 
-    def _raw_value(self, value):
+    @staticmethod
+    def _raw_value(value):
         """
         Get the raw value.
         :param value:
         :return:
         """
-        if self._is_top_level and isinstance(value, self._item_cls):
+        if isinstance(value, models.Parameter):
             return value.value
         return value
 
-    def _encapsulate_value(self, key, value):
+    @staticmethod
+    def _encapsulate_value(key, value):
         """
         Create a new item cls if needed.
         :param key:
         :param value:
         :return:
         """
-        if isinstance(value, self._item_cls):
+        if isinstance(value, models.Parameter):
             return value
         # If it is not wrapped
-        return self._item_cls.wrap(key, value)
+        return models.Parameter.wrap(key, value)
 
     def __setitem__(self, key, value):
         """
@@ -294,7 +291,7 @@ class _InstrumentedCollection(object):
         if self._is_top_level:
             # We are at the top level
             field = getattr(self._parent, self._field_name)
-            mapi = getattr(self._model, self._item_cls.__modelname__)
+            mapi = getattr(self._model, models.Parameter.__modelname__)
             value = self._set_field(field,
                                     key,
                                     value if key in field else self._encapsulate_value(key, value))
@@ -313,24 +310,19 @@ class _InstrumentedCollection(object):
         """
         if isinstance(value, _InstrumentedCollection):
             value = value._raw
-        if key in collection and isinstance(collection[key], self._item_cls):
-            if isinstance(collection[key], self.PYTHON_TYPE):
+        if key in collection and isinstance(collection[key], models.Parameter):
+            if isinstance(collection[key], _InstrumentedCollection):
                 self._del(collection, key)
             collection[key].value = value
         else:
             collection[key] = value
         return collection[key]
 
-    def __copy__(self):
-        return self._raw
-
     def __deepcopy__(self, *args, **kwargs):
         return self._raw
 
 
 class _InstrumentedDict(_InstrumentedCollection, dict):
-
-    PYTHON_TYPE = dict
 
     def _load(self, dict_=None, **kwargs):
         dict.__init__(
@@ -348,15 +340,6 @@ class _InstrumentedDict(_InstrumentedCollection, dict):
     def __getitem__(self, key):
         return self._instrument(key, dict.__getitem__(self, key))
 
-    def values(self):
-        return [self[key] for key in self.keys()]
-
-    def items(self):
-        return [(key, self[key]) for key in self.keys()]
-
-    def __iter__(self):
-        return (key for key in self.keys())
-
     def _set(self, key, value):
         dict.__setitem__(self, key, self._raw_value(value))
 
@@ -365,12 +348,10 @@ class _InstrumentedDict(_InstrumentedCollection, dict):
         return dict(self)
 
     def _del(self, collection, key):
-        collection[key].clear()
+        del collection[key]
 
 
 class _InstrumentedList(_InstrumentedCollection, list):
-
-    PYTHON_TYPE = list
 
     def _load(self, list_=None, **kwargs):
         list.__init__(self, list(item for item in list_ or []))
@@ -412,24 +393,21 @@ class InstrumentCollection(object):
         return self._actor
 
     def __getattr__(self, item):
-        try:
-            return getattr(self._actor, item)
-        except AttributeError:
-            return super(InstrumentCollection, self).__getattribute__(item)
+        return getattr(self._actor, item)
 
     def __call__(self, func, *args, **kwargs):
         def _wrapper(func_self, *args, **kwargs):
             self._actor = func(func_self, *args, **kwargs)
             field = getattr(self._actor, self._field_name)
 
-            # Preserve the original value
+            # Preserve the original value. e.g. original attributes would be located under
+            # _attributes
             setattr(self, '_{0}'.format(self._field_name), field)
 
             # set instrumented value
             setattr(self, self._field_name, _InstrumentedDict(func_self.model,
                                                               self._actor,
                                                               self._field_name,
-                                                              modeling.models.Parameter,
                                                               field))
             return self
         return _wrapper

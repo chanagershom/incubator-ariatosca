@@ -34,7 +34,9 @@ class NodeToolBelt(object):
         """
         assert isinstance(self._op_context, operation.NodeOperationContext)
         host = self._op_context.node.host
-        return getattr(host.attributes.get('ip'), 'value', None)
+        ip = host.attributes.get('ip')
+        if ip:
+            return ip.value
 
 
 

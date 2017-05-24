@@ -45,11 +45,11 @@ class ContextSugaring(object):
 
     @pytest.fixture
     def dict_(self, actor, model):
-        return common._InstrumentedDict(model, actor, 'dict_', item_cls=Parameter)
+        return common._InstrumentedDict(model, actor, 'dict_')
 
     @pytest.fixture
     def list_(self, actor, model):
-        return common._InstrumentedList(model, actor, field_name='list_', item_cls=Parameter)
+        return common._InstrumentedList(model, actor, 'list_')
 
 
 class TestDict(ContextSugaring):

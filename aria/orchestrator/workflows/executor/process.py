@@ -309,8 +309,9 @@ def _main():
         task_func(ctx=ctx, **operation_inputs)
         messenger.succeeded()
     except BaseException as e:
-        ctx._teardown_db_resources()
         messenger.failed(e)
+    finally:
+        ctx.close()
 
 if __name__ == '__main__':
     _main()
