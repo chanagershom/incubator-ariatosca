@@ -85,7 +85,6 @@ class ParameterBase(TemplateModelMixin, caching.HasCachedMethods):
 
         raise ValueError('orphaned parameter: does not have an owner: {0}'.format(self.name))
 
-
     @property
     @caching.cachedmethod
     def container(self): # pylint: disable=too-many-return-statements,too-many-branches
@@ -871,6 +870,121 @@ class PropertyBase(TemplateModelMixin, caching.HasCachedMethods):
     def value(self, value):
         self._value = value
 
+    # region foreign keys
+
+    @declared_attr
+    def node_template_fk(cls):
+        """For Property many-to-one to NodeTemplate"""
+        return relationship.foreign_key('node_template', nullable=True)
+
+    @declared_attr
+    def group_template_fk(cls):
+        """For Property many-to-one to GroupTemplate"""
+        return relationship.foreign_key('group_template', nullable=True)
+
+    @declared_attr
+    def policy_template_fk(cls):
+        """For Property many-to-one to PolicyTemplate"""
+        return relationship.foreign_key('policy_template', nullable=True)
+
+    @declared_attr
+    def relationship_template_fk(cls):
+        """For Property many-to-one to RelationshipTemplate"""
+        return relationship.foreign_key('relationship_template', nullable=True)
+
+    @declared_attr
+    def capability_template_fk(cls):
+        """For Property many-to-one to CapabilityTemplate"""
+        return relationship.foreign_key('capability_template', nullable=True)
+
+    @declared_attr
+    def artifact_template_fk(cls):
+        """For Property many-to-one to ArtifactTemplate"""
+        return relationship.foreign_key('artifact_template', nullable=True)
+
+    @declared_attr
+    def node_fk(cls):
+        """For Property many-to-one to Node"""
+        return relationship.foreign_key('node', nullable=True)
+
+    @declared_attr
+    def group_fk(cls):
+        """For Property many-to-one to Group"""
+        return relationship.foreign_key('group', nullable=True)
+
+    @declared_attr
+    def policy_fk(cls):
+        """For Property many-to-one to Policy"""
+        return relationship.foreign_key('policy', nullable=True)
+
+    @declared_attr
+    def relationship_fk(cls):
+        """For Property many-to-one to Relationship"""
+        return relationship.foreign_key('relationship', nullable=True)
+
+    @declared_attr
+    def capability_fk(cls):
+        """For Property many-to-one to Capability"""
+        return relationship.foreign_key('capability', nullable=True)
+
+    @declared_attr
+    def artifact_fk(cls):
+        """For Property many-to-one to Artifact"""
+        return relationship.foreign_key('artifact', nullable=True)
+    # endregion
+
+    # region many_to_one relationships
+
+    @declared_attr
+    def node_template(cls):
+        return relationship.many_to_one(cls, 'node_template')
+
+    @declared_attr
+    def group_template(cls):
+        return relationship.many_to_one(cls, 'group_template')
+
+    @declared_attr
+    def policy_template(cls):
+        return relationship.many_to_one(cls, 'policy_template')
+
+    @declared_attr
+    def relationship_template(cls):
+        return relationship.many_to_one(cls, 'relationship_template')
+
+    @declared_attr
+    def capability_template(cls):
+        return relationship.many_to_one(cls, 'capability_template')
+
+    @declared_attr
+    def artifact_template(cls):
+        return relationship.many_to_one(cls, 'artifact_template')
+
+    @declared_attr
+    def node(cls):
+        return relationship.many_to_one(cls, 'node')
+
+    @declared_attr
+    def group(cls):
+        return relationship.many_to_one(cls, 'group')
+
+    @declared_attr
+    def policy(cls):
+        return relationship.many_to_one(cls, 'policy')
+
+    @declared_attr
+    def relationship(cls):
+        return relationship.many_to_one(cls, 'relationship')
+
+    @declared_attr
+    def capability(cls):
+        return relationship.many_to_one(cls, 'capability')
+
+    @declared_attr
+    def artifact(cls):
+        return relationship.many_to_one(cls, 'artifact')
+
+    # endregion
+
     @property
     @caching.cachedmethod
     def owner(self):
@@ -885,7 +999,7 @@ class PropertyBase(TemplateModelMixin, caching.HasCachedMethods):
         for the_relationship in self.__mapper__.relationships:
             v = getattr(self, the_relationship.key)
             if v:
-                return v[0] # because we are many-to-many, the back reference will be a list
+                return v
 
         raise ValueError('orphaned property: does not have an owner: {0}'.format(self.name))
 
@@ -939,36 +1053,36 @@ class PropertyBase(TemplateModelMixin, caching.HasCachedMethods):
 
         raise ValueError('orphaned property: does not have a container: {0}'.format(self.name))
 
-    # @property
-    # @caching.cachedmethod
-    # def service(self):
-    #     """
-    #     The :class:`Service` containing this parameter, or None if not contained in a service.
-    #     """
-    #
-    #     from . import models
-    #     container = self.container
-    #     if isinstance(container, models.Service):
-    #         return container
-    #     elif hasattr(container, 'service'):
-    #         return container.service
-    #     return None
-    #
-    # @property
-    # @caching.cachedmethod
-    # def service_template(self):
-    #     """
-    #     The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
-    #     service template.
-    #     """
-    #
-    #     from . import models
-    #     container = self.container
-    #     if isinstance(container, models.ServiceTemplate):
-    #         return container
-    #     elif hasattr(container, 'service_template'):
-    #         return container.service_template
-    #     return None
+    @property
+    @caching.cachedmethod
+    def service(self):
+        """
+        The :class:`Service` containing this parameter, or None if not contained in a service.
+        """
+
+        from . import models
+        container = self.container
+        if isinstance(container, models.Service):
+            return container
+        elif hasattr(container, 'service'):
+            return container.service
+        return None
+
+    @property
+    @caching.cachedmethod
+    def service_template(self):
+        """
+        The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
+        service template.
+        """
+
+        from . import models
+        container = self.container
+        if isinstance(container, models.ServiceTemplate):
+            return container
+        elif hasattr(container, 'service_template'):
+            return container.service_template
+        return None
 
     @property
     def as_raw(self):

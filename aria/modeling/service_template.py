@@ -495,6 +495,10 @@ class NodeTemplateBase(TemplateModelMixin):
     def requirement_templates(cls):
         return relationship.one_to_many(cls, 'requirement_template', child_fk='node_template_fk')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -510,10 +514,6 @@ class NodeTemplateBase(TemplateModelMixin):
     # endregion
 
     # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def attributes(cls):
@@ -678,6 +678,10 @@ class GroupTemplateBase(TemplateModelMixin):
     def interface_templates(cls):
         return relationship.one_to_many(cls, 'interface_template', dict_key='name')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -697,10 +701,6 @@ class GroupTemplateBase(TemplateModelMixin):
     @declared_attr
     def node_templates(cls):
         return relationship.many_to_many(cls, 'node_template')
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -805,6 +805,10 @@ class PolicyTemplateBase(TemplateModelMixin):
     def policies(cls):
         return relationship.one_to_many(cls, 'policy')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -828,10 +832,6 @@ class PolicyTemplateBase(TemplateModelMixin):
     @declared_attr
     def group_templates(cls):
         return relationship.many_to_many(cls, 'group_template')
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1372,6 +1372,10 @@ class RelationshipTemplateBase(TemplateModelMixin):
     def interface_templates(cls):
         return relationship.one_to_many(cls, 'interface_template', dict_key='name')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1379,14 +1383,6 @@ class RelationshipTemplateBase(TemplateModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1494,6 +1490,10 @@ class CapabilityTemplateBase(TemplateModelMixin):
     def capabilities(cls):
         return relationship.one_to_many(cls, 'capability')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1513,10 +1513,6 @@ class CapabilityTemplateBase(TemplateModelMixin):
     @declared_attr
     def valid_source_node_types(cls):
         return relationship.many_to_many(cls, 'type', prefix='valid_sources')
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1984,6 +1980,10 @@ class ArtifactTemplateBase(TemplateModelMixin):
     def artifacts(cls):
         return relationship.one_to_many(cls, 'artifact')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1995,14 +1995,6 @@ class ArtifactTemplateBase(TemplateModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', prefix='properties', dict_key='name')
 
     # endregion
 

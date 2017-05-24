@@ -463,6 +463,10 @@ class NodeBase(InstanceModelMixin):
         return relationship.one_to_many(cls, 'interface', dict_key='name')
 
     @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
+    @declared_attr
     def artifacts(cls):
         return relationship.one_to_many(cls, 'artifact', dict_key='name')
 
@@ -509,10 +513,6 @@ class NodeBase(InstanceModelMixin):
     # endregion
 
     # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def attributes(cls):
@@ -756,6 +756,10 @@ class GroupBase(InstanceModelMixin):
     # region one_to_many relationships
 
     @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
+    @declared_attr
     def interfaces(cls):
         return relationship.one_to_many(cls, 'interface', dict_key='name')
 
@@ -782,10 +786,6 @@ class GroupBase(InstanceModelMixin):
     @declared_attr
     def nodes(cls):
         return relationship.many_to_many(cls, 'node')
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -879,6 +879,10 @@ class PolicyBase(InstanceModelMixin):
 
     # region one_to_many relationships
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -898,10 +902,6 @@ class PolicyBase(InstanceModelMixin):
     # endregion
 
     # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     @declared_attr
     def nodes(cls):
@@ -1253,6 +1253,10 @@ class RelationshipBase(InstanceModelMixin):
     def interfaces(cls):
         return relationship.one_to_many(cls, 'interface', dict_key='name')
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1278,14 +1282,6 @@ class RelationshipBase(InstanceModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1399,6 +1395,10 @@ class CapabilityBase(InstanceModelMixin):
 
     # region one_to_many relationships
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1414,14 +1414,6 @@ class CapabilityBase(InstanceModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-
-    # endregion
-
-    # region many_to_many relationships
-
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
 
     # endregion
 
@@ -1855,6 +1847,10 @@ class ArtifactBase(InstanceModelMixin):
 
     # region one_to_many relationships
 
+    @declared_attr
+    def properties(cls):
+        return relationship.one_to_many(cls, 'property', dict_key='name')
+
     # endregion
 
     # region many_to_one relationships
@@ -1869,12 +1865,6 @@ class ArtifactBase(InstanceModelMixin):
     @declared_attr
     def type(cls):
         return relationship.many_to_one(cls, 'type', back_populates=relationship.NO_BACK_POP)
-    # endregion
-
-    # region many_to_many relationships
-    @declared_attr
-    def properties(cls):
-        return relationship.many_to_many(cls, 'property', dict_key='name')
     # endregion
 
     description = Column(Text)
