@@ -215,6 +215,10 @@ class ServiceTemplateBase(TemplateModelMixin):
         return relationship.one_to_many(cls, 'node_template', dict_key='name')
 
     @declared_attr
+    def outputs(cls):
+        return relationship.one_to_many(cls, 'output', dict_key='name')
+
+    @declared_attr
     def group_templates(cls):
         return relationship.one_to_many(cls, 'group_template', dict_key='name')
 
@@ -246,10 +250,6 @@ class ServiceTemplateBase(TemplateModelMixin):
     @declared_attr
     def inputs(cls):
         return relationship.many_to_many(cls, 'input', dict_key='name')
-
-    @declared_attr
-    def outputs(cls):
-        return relationship.many_to_many(cls, 'output', dict_key='name')
 
     # endregion
 

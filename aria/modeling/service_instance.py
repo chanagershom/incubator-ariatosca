@@ -121,6 +121,10 @@ class ServiceBase(InstanceModelMixin):
     # region one_to_many relationships
 
     @declared_attr
+    def outputs(cls):
+        return relationship.one_to_many(cls, 'output', dict_key='name')
+
+    @declared_attr
     def updates(cls):
         return relationship.one_to_many(cls, 'service_update')
 
@@ -168,10 +172,6 @@ class ServiceBase(InstanceModelMixin):
     @declared_attr
     def inputs(cls):
         return relationship.many_to_many(cls, 'input', dict_key='name')
-
-    @declared_attr
-    def outputs(cls):
-        return relationship.many_to_many(cls, 'output', dict_key='name')
 
     @declared_attr
     def plugins(cls):

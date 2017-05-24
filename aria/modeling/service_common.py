@@ -332,36 +332,62 @@ class OutputBase(TemplateModelMixin, caching.HasCachedMethods):
 
         raise ValueError('orphaned output: does not have a container: {0}'.format(self.name))
 
-    @property
-    @caching.cachedmethod
-    def service(self):
-        """
-        The :class:`Service` containing this parameter, or None if not contained in a service.
-        """
+    # @property
+    # @caching.cachedmethod
+    # def service(self):
+    #     """
+    #     The :class:`Service` containing this parameter, or None if not contained in a service.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.Service):
+    #         return container
+    #     elif hasattr(container, 'service'):
+    #         return container.service
+    #     return None
 
-        from . import models
-        container = self.container
-        if isinstance(container, models.Service):
-            return container
-        elif hasattr(container, 'service'):
-            return container.service
-        return None
+    # @property
+    # @caching.cachedmethod
+    # def service_template(self):
+    #     """
+    #     The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
+    #     service template.
+    #     """
+    #
+    #     from . import models
+    #     container = self.container
+    #     if isinstance(container, models.ServiceTemplate):
+    #         return container
+    #     elif hasattr(container, 'service_template'):
+    #         return container.service_template
+    #     return None
 
-    @property
-    @caching.cachedmethod
-    def service_template(self):
-        """
-        The :class:`ServiceTemplate` containing this parameter, or None if not contained in a
-        service template.
-        """
+    # region foreign keys
 
-        from . import models
-        container = self.container
-        if isinstance(container, models.ServiceTemplate):
-            return container
-        elif hasattr(container, 'service_template'):
-            return container.service_template
-        return None
+    @declared_attr
+    def service_template_fk(cls):
+        """For Output many-to-one to ServiceTemplate"""
+        return relationship.foreign_key('service_template', nullable=True)
+
+    @declared_attr
+    def service_fk(cls):
+        """For Output many-to-one to Service"""
+        return relationship.foreign_key('service', nullable=True)
+
+    # endregion
+
+    # region many_to_one relationships
+
+    @declared_attr
+    def service_template(cls):
+        return relationship.many_to_one(cls, 'service_template')
+
+    @declared_attr
+    def service(cls):
+        return relationship.many_to_one(cls, 'service')
+
+    # endregion
 
     @property
     def as_raw(self):
